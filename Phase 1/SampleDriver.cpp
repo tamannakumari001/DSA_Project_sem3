@@ -23,8 +23,37 @@ int main(int argc, char* argv[]) {
         Initialize any classes and data structures needed for query processing
     */
     Graph graph(argv[1]);
-    
+
     // Read queries from second file
+
+    fstream file(argv[2]);
+    if (!file.is_open()) {
+        cerr << "Error opening file: " << argv[2] << endl;
+        return;
+    }
+    nlohmann::json data;
+    file >> data;
+
+    for (auto& event : data["events"]){
+        string type = event["type"];
+        if (type == "shortest_path"){
+            //shortest_path function
+        }
+        else if (type == "remove_edge"){
+            //remove_edge function
+        }
+
+        else if (type == "modify_edge"){
+            //modify_edge function
+        }
+
+        else if (type == "knn"){
+            //knn function
+        }
+            
+        
+    }
+
 
 
     std::ifstream queries_file(argv[2]);
