@@ -32,4 +32,8 @@ private:
     int num_nodes;
 public:
     Graph(const string& filename);
-}
+    ~Graph();
+    
+};
+
+
