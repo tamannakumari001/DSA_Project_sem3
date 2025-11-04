@@ -3,6 +3,18 @@
 
 string ROAD_TYPES[5] = {"primary","secondary","tertiary","expressway","local"};
 
+void Graph::add_edge(Edge* edge){
+    vector<pair<Node*, Edge*>> list = adj_list[edge->from];
+    if (find(list.begin(), list.end(), make_pair(nodes[edge->to], edge)) != list.end()){
+        return;
+    }
+    adj_list[edge->from].emplace_back(nodes[edge->to], edge);
+    if (!edge->oneway){
+        adj_list[edge->to].emplace_back(nodes[edge->from], edge);
+    }
+}
+
+
 Graph::Graph(const string& filename) {
     fstream file(filename);
     if (!file.is_open()) {
@@ -38,11 +50,84 @@ Graph::Graph(const string& filename) {
         }
         edge->oneway = e["oneway"];
         edge->road_type = e["road_type"];
-        edges.push_back(edge);
-        adj_list[edge->from].emplace_back(nodes[edge->to], edge);
-        if (!edge->oneway){
-            adj_list[edge->to].emplace_back(nodes[edge->from], edge);
-        }
+        edges[edge->id] = edge;
+        add_edge(edge);
     }
     
+}
+
+
+void Graph::remove_edge(int edge_id){
+    if (edges.find(edge_id) == edges.end()) {
+        return;
+    }
+    Edge* edge = edges[edge_id];
+    int from = edge->from;
+    int to = edge->to;
+
+    auto& from_list = adj_list[from];
+    for(auto it = from_list.begin(); it != from_list.end(); ++it) {
+        if (it->second->id == edge_id) {
+            from_list.erase(it);
+            break;
+        }
+    }
+    if (!edge->oneway) {
+        auto& to_list = adj_list[to];
+        for(auto it = to_list.begin(); it != to_list.end(); ++it) {
+            if (it->second->id == edge_id) {
+                to_list.erase(it);
+                break;
+            }
+        }
+    }
+
+    edges.erase(edge_id);
+    delete edge;
+
+}
+
+void Graph::modify_edge(int edge_id, const nlohmann::json& patch){
+    if (edges.find(edge_id)==edges.end()){
+        return;
+    }
+
+    Edge* edge = edges[edge_id];
+    add_edge(edge);
+    
+
+    if (patch.contains("length")){
+        edge->length = patch["length"];
+    }
+    if (patch.contains("average_time")){
+        edge->avg_time = patch["average_time"]; 
+    }
+    if (patch.contains("road_type")){
+        edge -> road_type = patch["road_type"];
+    }
+    // if (patch.contains("speed_profile")){
+    //     edge->speed_profile.clear();
+    //     for (auto& speed : patch["speed_profile"]){
+    //         edge->speed_profile.push_back(speed);
+    //     }
+    // }
+    if (patch.contains("oneway")){
+        bool prev = edge->oneway;
+        edge->oneway = patch["oneway"]; 
+        if (prev == edge->oneway) return;
+
+        if (edge->oneway){
+            auto it = find(adj_list[edge->to].begin() , adj_list[edge -> to].end() , make_pair(nodes[edge->from] , edge));
+            if (it != adj_list[edge->to].end()){
+                adj_list[edge -> to].erase(it);
+            }
+        }
+        else{
+            adj_list[edge->to].emplace_back(nodes[edge->from], edge);
+        }
+        
+    }
+
+
+
 }

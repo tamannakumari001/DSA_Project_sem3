@@ -2,6 +2,7 @@
 #include <vector>
 #include <map>
 #include <nlohmann/json.hpp>
+#include <algorithm>
 
 
 using namespace std;
@@ -26,14 +27,15 @@ struct Edge{
 
 class Graph{
 private:
-    vector<Edge*> edges;
+    unordered_map<int, Edge*> edges;
     vector<Node*> nodes;
     vector<vector<pair<Node*, Edge*>>> adj_list;
     int num_nodes;
 public:
     Graph(const string& filename);
-    ~Graph();
-    
+    void remove_edge(int edge_id);
+    void modify_edge(int edge_id, const nlohmann::json& patch);
+    void add_edge(Edge* edge);
 };
 
 
