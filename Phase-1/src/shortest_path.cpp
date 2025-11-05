@@ -68,22 +68,25 @@ Graph::PathResult Graph::minimumTime(int src, int dest,
 
             double t1 = time[u];
             double newTime;
+            
             if (edge->speed_profile.empty()){
                 t1 = edge->avg_time;
                 newTime = time[u] + t1; 
             }else{
-                int currentIdx = (int)(time[u]/15);
+                int currentIdx = (int)(time[u]/15) % 96;
                 double distToBeTravelled = edge->length;
                 while(true){
+                    int multiplier = (int)(t1/(15*96)) + 1;
                     int currSpeed;
                     if (currentIdx < 96){
                         currSpeed = edge->speed_profile[currentIdx];
                     }else{
-                        currSpeed = edge->speed_profile.back();
+                        currSpeed = edge->speed_profile.front();
+                        currentIdx = 0;
                     }
-                    if(distToBeTravelled - currSpeed*((currentIdx+1)*15 - t1) > 0){
-                        distToBeTravelled -= currSpeed*((currentIdx+1)*15 - t1);
-                        t1 = (currentIdx+1)*15;
+                    if(distToBeTravelled - currSpeed*((currentIdx+1)*15*multiplier - t1) > 0){
+                        distToBeTravelled -= currSpeed*((currentIdx+1)*15*multiplier - t1);
+                        t1 = (currentIdx+1)*15*multiplier;
                         currentIdx++;
                     }else{
                         t1 += (distToBeTravelled)/currSpeed;
