@@ -51,8 +51,11 @@ Graph::Graph(const std::string& filename) {
         edge->to = e["v"];
         edge->length = e["length"];
         edge->avg_time = e["average_time"];
-        for (auto& speed : e["speed_profile"]){
-            edge->speed_profile.push_back(speed);
+
+        if (e.contains("speed_profile")){
+            for (auto& speed : e["speed_profile"]){
+                edge->speed_profile.push_back(speed);
+            }
         }
         edge->oneway = e["oneway"];
         edge->road_type = e["road_type"];
@@ -64,44 +67,45 @@ Graph::Graph(const std::string& filename) {
 }
 
 
-void Graph::remove_edge(int edge_id){
-    if (edges.find(edge_id) == edges.end()) {
-        return;
-    }
-    Edge* edge = edges[edge_id];
-    int from = edge->from;
-    int to = edge->to;
+json Graph::remove_edge(const json& query){
 
-    auto& from_list = adj_list[from];
-    for(auto it = from_list.begin(); it != from_list.end(); ++it) {
-        if (it->second->id == edge_id) {
-            from_list.erase(it);
-            break;
-        }
+    json result;
+    result["id"] = query["id"];
+    if (!query.contains("edge_id")){
+        result["done"]= false;
+        return result;
     }
-    if (!edge->oneway) {
-        auto& to_list = adj_list[to];
-        for(auto it = to_list.begin(); it != to_list.end(); ++it) {
-            if (it->second->id == edge_id) {
-                to_list.erase(it);
-                break;
-            }
-        }
+    int edge_id = query["edge_id"];
+    if (edges.find(edge_id)==edges.end()){
+        result["done"]= false;
+        return result;
     }
-
-    edges.erase(edge_id);
-    delete edge;
+    edges[edge_id]->active = false;
+    result["done"] = true;
+    return result;
 
 }
 
-void Graph::modify_edge(int edge_id, const nlohmann::json& patch){
+json Graph::modify_edge(const json& query){
+
+    json result;
+    result["id"] = query["id"];
+
+    int edge_id = query["edge_id"];
+    json patch = query["patch"];
+
+    if (!query.contains("edge_id") || !query.contains("patch")){
+        result["done"]= false;
+        return result;
+    }
+
     if (edges.find(edge_id)==edges.end()){
-        return;
+        result["done"]= false;
+        return result;
     }
 
     Edge* edge = edges[edge_id];
-    add_edge(edge);
-    
+    edge -> active = true;
 
     if (patch.contains("length")){
         edge->length = patch["length"];
@@ -118,30 +122,13 @@ void Graph::modify_edge(int edge_id, const nlohmann::json& patch){
             edge->speed_profile.push_back(speed);
         }
     }
-    // if (patch.contains("oneway")){
-    //     bool prev = edge->oneway;
-    //     edge->oneway = patch["oneway"]; 
-    //     if (prev == edge->oneway) return;
 
-    //     if (edge->oneway){
-    //         auto it = find(adj_list[edge->to].begin() , adj_list[edge -> to].end() , make_pair(nodes[edge->from] , edge));
-    //         if (it != adj_list[edge->to].end()){
-    //             adj_list[edge -> to].erase(it);
-    //         }
-        
-    //     else{
-    //     adj_list[edge->to].emplace_back(nodes[edge->from], edge);
-    //     }
-    // }
-
-        
-    // }
-
-
+    result["done"] = true;
+    return result;
 
 }
 
-std::vector<int> Graph::knn(const nlohmann::json& query){
+json Graph::knn(const nlohmann::json& query){
     int query_id = query["id"];
     int k = query["k"];
     std::string poi_type = query["poi"];
@@ -150,6 +137,15 @@ std::vector<int> Graph::knn(const nlohmann::json& query){
     std::string metric = query["metric"];
 
     std::vector<int> final_answer;
+
+    json output;
+    output["id"] = query_id;
+
+    if (!query.contains("k") || !query.contains("poi") || !query.contains("query_point") || !query.contains("metric")){
+        output["points"] = final_answer;
+        output["nodes"] = {};
+        return output;
+    }
 
 
     if (metric == "euclidean"){
@@ -204,7 +200,7 @@ std::vector<int> Graph::knn(const nlohmann::json& query){
             }
 
             for (auto& [neighbor, edge] : adj_list[u]){
-
+                if (!edge->active) continue;
                 double weight = edge->length;
                 if (distances[u] + weight < distances[neighbor->id]){
                     distances[neighbor->id] = distances[u] + weight;
@@ -213,6 +209,6 @@ std::vector<int> Graph::knn(const nlohmann::json& query){
             }
         }
     }
-
-    return final_answer;
+    output["nodes"] = final_answer;
+    return output;
 }

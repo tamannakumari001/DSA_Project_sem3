@@ -19,7 +19,6 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    Graph graph(argv[1]);
     // Read graph from first file
     /*
         Add your graph reading and processing code here
@@ -29,45 +28,7 @@ int main(int argc, char* argv[]) {
 
     // Read queries from second file
 
-    std::fstream file(argv[2]);
-    if (!file.is_open()) {
-        std::cerr << "Error opening file: " << argv[2] << std::endl;
-        return;
-    }
-    nlohmann::json data;
-    file >> data;
 
-    for (auto& event : data["events"]){
-        std::string type = event["type"];
-        try{
-            if (type == "shortest_path"){
-                //shortest_path function
-            }
-            else if (type == "remove_edge"){
-                //remove_edge function
-                graph.remove_edge(event["edge_id"]);
-            }
-
-            else if (type == "modify_edge"){
-                //modify_edge function
-                int edge_id = event["edge_id"];
-                json patch = event["patch"];
-
-                graph.modify_edge(edge_id, patch);
-            }
-
-            else if (type == "knn"){
-                //knn function
-                graph.knn(event);
-            }
-        }
-
-        catch(...){
-            continue;
-        }
-            
-        
-    }
 
 
 
@@ -92,7 +53,23 @@ int main(int argc, char* argv[]) {
         // Answer each query replacing the function process_query using 
         // whatever function or class methods that you have implemented
         json result;
-        if (query["type"] == "shortest_path"){
+        auto type = query["type"];
+
+        if (type == "remove_edge"){
+            //remove_edge function
+            result=graph.remove_edge(query);
+        }
+
+        else if (type == "modify_edge"){
+            //modify_edge function
+            result = graph.modify_edge(query);
+        }
+
+        else if (type == "knn"){
+            //knn function
+            result = graph.knn(query);
+        }
+        else if (type == "shortest_path"){
             result = graph.ShortestPath(query);
         }
         // json result = process_query(query);
