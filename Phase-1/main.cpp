@@ -29,16 +29,16 @@ int main(int argc, char* argv[]) {
 
     // Read queries from second file
 
-    fstream file(argv[2]);
+    std::fstream file(argv[2]);
     if (!file.is_open()) {
-        cerr << "Error opening file: " << argv[2] << endl;
+        std::cerr << "Error opening file: " << argv[2] << std::endl;
         return;
     }
     nlohmann::json data;
     file >> data;
 
     for (auto& event : data["events"]){
-        string type = event["type"];
+        std::string type = event["type"];
         try{
             if (type == "shortest_path"){
                 //shortest_path function
@@ -93,7 +93,7 @@ int main(int argc, char* argv[]) {
         // whatever function or class methods that you have implemented
         json result;
         if (query["type"] == "shortest_path"){
-            result = ShortestPath(graph, query);
+            result = graph.ShortestPath(query);
         }
         // json result = process_query(query);
 
