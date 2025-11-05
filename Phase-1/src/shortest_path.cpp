@@ -8,7 +8,103 @@
 #include <iostream>   
 
 
+Graph::PathResult Graph::minimumTime(int src, int dest,
+                            const std::unordered_set<int>& forbiddenNodes,
+                            const std::unordered_set<std::string>& forbiddenRoadTypes){
 
+    int num_nodes = getNumNodes();
+    if (src >= num_nodes || dest >= num_nodes || src < 0 || dest < 0){
+        return PathResult{};
+    }
+
+    std::vector<double> time(num_nodes, std::numeric_limits<double>::infinity());
+
+    std::map<int, int> prev_node;
+
+    std::priority_queue<std::pair<double, int>,
+                        std::vector<std::pair<double, int>>,
+                        std::greater<std::pair<double, int>>> pq;
+
+    if (forbiddenNodes.count(src) || forbiddenNodes.count(dest)){
+        return PathResult{};
+    }
+
+    std::vector<bool> visited(num_nodes, false);
+
+    time[src] = 0.0;
+    pq.push({0.0, src});
+
+    while(!pq.empty()){
+        int u = pq.top().second;
+        pq.pop();
+
+        if(visited[u]){
+            continue;
+        }
+
+        visited[u] = true;
+
+        if (u == dest){
+            PathResult result;
+            result.distance = time[dest];
+            result.ifPath = true;
+
+            int curr_node = u;
+            while(true){
+                result.nodes.push_back(curr_node);
+                if(curr_node == src) break;
+                curr_node = prev_node[curr_node];
+            }
+        }
+
+        for(const auto& edge_rel : adj_list[u]){
+            Node* v_node = edge_rel.first;
+            Edge* edge = edge_rel.second;
+            int v = v_node->id;
+
+            if(forbiddenNodes.count(v) || forbiddenRoadTypes.count(edge->road_type)){
+                continue;
+            }
+
+            double t1 = time[u];
+            double newTime;
+            if (edge->speed_profile.empty()){
+                t1 = edge->avg_time;
+                newTime = time[u] + t1; 
+            }else{
+                int currentIdx = (int)(time[u]/15);
+                double distToBeTravelled = edge->length;
+                while(true){
+                    int currSpeed;
+                    if (currentIdx < 96){
+                        currSpeed = edge->speed_profile[currentIdx];
+                    }else{
+                        currSpeed = edge->speed_profile.back();
+                    }
+                    if(distToBeTravelled - currSpeed*((currentIdx+1)*15 - t1) > 0){
+                        distToBeTravelled -= currSpeed*((currentIdx+1)*15 - t1);
+                        t1 = (currentIdx+1)*15;
+                        currentIdx++;
+                    }else{
+                        t1 += (distToBeTravelled)/currSpeed;
+                        break;
+                    }
+                }
+                newTime = time[u] + t1;
+            }
+
+            if(!visited[v] && newTime < time[v]){
+                time[v] = newTime;
+                prev_node[v] = u;
+                pq.push({newTime,v}); 
+            }
+        }
+
+    }
+
+    return PathResult{};
+
+}
 
 
 Graph::PathResult Graph::minimumDistance(int src, int dest,
@@ -35,19 +131,20 @@ Graph::PathResult Graph::minimumDistance(int src, int dest,
         return PathResult{};
     }
 
-    
+    std::vector<bool> visited(num_nodes, false);
+
     dist[src] = 0.0;
     pq.push({0.0, src});
 
     while (!pq.empty()) {
-        std::pair<double, int> p = pq.top();
-        double d = p.first;
-        int u = p.second;
+        int u = pq.top().second;
         pq.pop();
 
-        if (d > dist[u]) {
+        if(visited[u]){
             continue;
         }
+
+        visited[u] = true;
 
         
         if (u == dest) {
@@ -73,27 +170,17 @@ Graph::PathResult Graph::minimumDistance(int src, int dest,
             Edge* edge = edge_rel.second;
             int v = v_node->id;
 
-            // Forbidden nodes
-            if (forbiddenNodes.count(v)) {
+            // Forbidden nodes and forbidden edges
+            if (forbiddenNodes.count(v) || forbiddenRoadTypes.count(edge->road_type) || !edge->active) {
                 continue; 
             }
-            
-            // Forbidden road types
-            if (forbiddenRoadTypes.count(edge->road_type)) {
-                continue;
-            }
-
-            // Oneway condition
-            if (edge->oneway && edge->to == u) {
-                continue; 
-            }
-
+             
             
             double length = edge->length;
             double newDist = dist[u] + length;
 
             
-            if (newDist < dist[v]) {
+            if (!visited[v] && newDist < dist[v]) {
                 dist[v] = newDist;      
                 prev_node[v] = u; 
                 pq.push({newDist, v}); 
@@ -143,6 +230,16 @@ json Graph::ShortestPath(json query){
             output["path"] = result.nodes;
         }else{
             output["possible"] = false; 
+        }
+    }else{
+        result = minimumTime(src, dest, forbiddenNodes, forbiddenRoadTypes);
+
+        if(result.ifPath){
+            output["possible"] = true;
+            output["minimum_time"] = result.distance;
+            output["path"] = result.nodes;
+        }else{
+            output["possible"] = false;
         }
     } 
 

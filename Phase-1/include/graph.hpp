@@ -50,6 +50,11 @@ public:
     PathResult minimumDistance(int src, int dest,
                            const std::unordered_set<int>& forbiddenNodes,
                            const std::unordered_set<std::string>& forbiddenRoadTypes);
+
+    PathResult minimumTime(int src, int dest,
+                            const std::unordered_set<int>& forbiddenNodes,
+                            const std::unordered_set<std::string>& forbiddenRoadTypes);
+
     int getNumNodes(){
         return num_nodes;
     }
@@ -57,4 +62,5 @@ public:
     void modify_edge(int edge_id, const nlohmann::json& patch);
     void add_edge(Edge* edge);
     std::vector<int> knn(const nlohmann::json& query);
+
 };
