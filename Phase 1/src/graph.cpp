@@ -2,12 +2,10 @@
 #include <fstream>
 
 string ROAD_TYPES[5] = {"primary","secondary","tertiary","expressway","local"};
+string POIS[6] = {"restautant" , "petrol_station" , "hospital" , "atm" , "hotel" , "pharmacy"};
 
 void Graph::add_edge(Edge* edge){
-    vector<pair<Node*, Edge*>> list = adj_list[edge->from];
-    if (find(list.begin(), list.end(), make_pair(nodes[edge->to], edge)) != list.end()){
-        return;
-    }
+
     adj_list[edge->from].emplace_back(nodes[edge->to], edge);
     if (!edge->oneway){
         adj_list[edge->to].emplace_back(nodes[edge->from], edge);
@@ -32,9 +30,13 @@ Graph::Graph(const string& filename) {
         node->id = n["id"];
         node->lat = n["lat"];
         node->lon = n["lon"];
-        for (auto& poi : n["pois"]){
-            node->pois.push_back(poi);
+        for (auto& poi : POIS){
+            node->pois[poi] = false;
         }
+        for (auto& poi : n["pois"]){
+            node->pois[poi] = true;
+        }
+
         nodes[node->id] = node;
     }
 
@@ -51,6 +53,7 @@ Graph::Graph(const string& filename) {
         edge->oneway = e["oneway"];
         edge->road_type = e["road_type"];
         edges[edge->id] = edge;
+        edge -> active = true;
         add_edge(edge);
     }
     
@@ -188,7 +191,7 @@ vector<int> Graph::knn(const nlohmann::json& query){
             if (processed[u]) continue;
             processed[u] = true;
 
-            if (find(nodes[u]->pois.begin(), nodes[u]->pois.end(), poi_type) != nodes[u]->pois.end()){
+            if (nodes[u]->pois[poi_type]){
                 final_answer.push_back(u);
                 pois_found++;
                 if (pois_found == k){

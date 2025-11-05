@@ -36,25 +36,31 @@ int main(int argc, char* argv[]) {
 
     for (auto& event : data["events"]){
         string type = event["type"];
-        if (type == "shortest_path"){
-            //shortest_path function
-        }
-        else if (type == "remove_edge"){
-            //remove_edge function
-            graph.remove_edge(event["edge_id"]);
+        try{
+            if (type == "shortest_path"){
+                //shortest_path function
+            }
+            else if (type == "remove_edge"){
+                //remove_edge function
+                graph.remove_edge(event["edge_id"]);
+            }
+
+            else if (type == "modify_edge"){
+                //modify_edge function
+                int edge_id = event["edge_id"];
+                json patch = event["patch"];
+
+                graph.modify_edge(edge_id, patch);
+            }
+
+            else if (type == "knn"){
+                //knn function
+                graph.knn(event);
+            }
         }
 
-        else if (type == "modify_edge"){
-            //modify_edge function
-            int edge_id = event["edge_id"];
-            json patch = event["patch"];
-
-            graph.modify_edge(edge_id, patch);
-        }
-
-        else if (type == "knn"){
-            //knn function
-            graph.knn(event);
+        catch(...){
+            continue;
         }
             
         

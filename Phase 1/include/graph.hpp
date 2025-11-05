@@ -12,7 +12,7 @@ struct Node{
     int id;
     double lat;
     double lon;
-    vector<string> pois;
+    unordered_map<string,bool> pois;
 };
 
 struct Edge{
@@ -24,6 +24,7 @@ struct Edge{
     vector<double> speed_profile;
     bool oneway;
     string road_type;
+    bool active;
 };
 
 class Graph{
@@ -38,6 +39,7 @@ public:
     void modify_edge(int edge_id, const nlohmann::json& patch);
     void add_edge(Edge* edge);
     vector<int> knn(const nlohmann::json& query);
+
 };
 
 
