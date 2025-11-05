@@ -1,8 +1,12 @@
 #include "../include/graph.hpp"
 #include <fstream>
 
-string ROAD_TYPES[5] = {"primary","secondary","tertiary","expressway","local"};
-string POIS[6] = {"restautant" , "petrol_station" , "hospital" , "atm" , "hotel" , "pharmacy"};
+std::string ROAD_TYPES[5] = {"primary","secondary","tertiary","expressway","local"};
+std::string POIS[6] = {"restautant" , "petrol_station" , "hospital" , "atm" , "hotel" , "pharmacy"};
+using json = nlohmann::json;
+
+std::string ROAD_TYPES[5] = {"primary","secondary","tertiary","expressway","local"};
+
 
 void Graph::add_edge(Edge* edge){
 
@@ -13,13 +17,13 @@ void Graph::add_edge(Edge* edge){
 }
 
 
-Graph::Graph(const string& filename) {
-    fstream file(filename);
+Graph::Graph(const std::string& filename) {
+    std::fstream file(filename);
     if (!file.is_open()) {
-        cerr << "Error opening file: " << filename << endl;
+        std::cerr << "Error opening file: " << filename << std::endl;
         return;
     }
-    nlohmann::json data;
+    json data;
     file >> data;
 
     num_nodes = data["meta"]["nodes"];
@@ -137,19 +141,19 @@ void Graph::modify_edge(int edge_id, const nlohmann::json& patch){
 
 }
 
-vector<int> Graph::knn(const nlohmann::json& query){
+std::vector<int> Graph::knn(const nlohmann::json& query){
     int query_id = query["id"];
     int k = query["k"];
-    string poi_type = query["poi"];
+    std::string poi_type = query["poi"];
     double query_lat = query["query_point"]["lat"];
     double query_lon = query["query_point"]["lon"];
-    string metric = query["metric"];
+    std::string metric = query["metric"];
 
-    vector<int> final_answer;
+    std::vector<int> final_answer;
 
 
     if (metric == "euclidean"){
-        priority_queue<pair<double, int>, vector<pair<double, int>>, greater<pair<double, int>>> q;
+        std::priority_queue<std::pair<double, int>, std::vector<std::pair<double, int>>, std::greater<std::pair<double, int>>> q;
 
         for (auto& node : nodes){
             if (find(node->pois.begin(), node->pois.end(), poi_type) != node->pois.end()){
@@ -168,7 +172,7 @@ vector<int> Graph::knn(const nlohmann::json& query){
         if(nodes.empty()){
             return {};
         }
-        double curr_min = numeric_limits<double>::max();
+        double curr_min = std::numeric_limits<double>::max();
         int source_id = -1;
         for(auto& node : nodes){
             double dist = sqrt(pow(node->lat - query_lat, 2) + pow(node->lon - query_lon, 2));
@@ -178,10 +182,10 @@ vector<int> Graph::knn(const nlohmann::json& query){
             }
         }
         int pois_found = 0;
-        vector<double> distances(num_nodes, numeric_limits<double>::max());
-        vector<bool> processed(num_nodes, false);
+        std::vector<double> distances(num_nodes, std::numeric_limits<double>::max());
+        std::vector<bool> processed(num_nodes, false);
         distances[source_id] = 0.0;
-        priority_queue<pair<double, int>, vector<pair<double, int>>, greater<pair<double, int>>> q;
+        std::priority_queue<std::pair<double, int>, std::vector<std::pair<double, int>>, std::greater<std::pair<double, int>>> q;
         q.push({0.0, source_id});  
 
         while (!q.empty()){
