@@ -9,6 +9,8 @@
     Add other includes that you require, only write code wherever indicated
 */
 
+#include "src/graph.cpp"
+
 using json = nlohmann::json;
 
 int main(int argc, char* argv[]) {
@@ -23,8 +25,46 @@ int main(int argc, char* argv[]) {
         Add your graph reading and processing code here
         Initialize any classes and data structures needed for query processing
     */
+    Graph graph(argv[1]);
 
     // Read queries from second file
+
+    fstream file(argv[2]);
+    if (!file.is_open()) {
+        cerr << "Error opening file: " << argv[2] << endl;
+        return;
+    }
+    nlohmann::json data;
+    file >> data;
+
+    for (auto& event : data["events"]){
+        string type = event["type"];
+        if (type == "shortest_path"){
+            //shortest_path function
+        }
+        else if (type == "remove_edge"){
+            //remove_edge function
+            graph.remove_edge(event["edge_id"]);
+        }
+
+        else if (type == "modify_edge"){
+            //modify_edge function
+            int edge_id = event["edge_id"];
+            json patch = event["patch"];
+
+            graph.modify_edge(edge_id, patch);
+        }
+
+        else if (type == "knn"){
+            //knn function
+            graph.knn(event);
+        }
+            
+        
+    }
+
+
+
     std::ifstream queries_file(argv[2]);
     if (!queries_file.is_open()) {
         std::cerr << "Failed to open " << argv[2] << std::endl;
