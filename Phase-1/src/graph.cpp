@@ -5,7 +5,7 @@ std::string ROAD_TYPES[5] = {"primary","secondary","tertiary","expressway","loca
 std::string POIS[6] = {"restautant" , "petrol_station" , "hospital" , "atm" , "hotel" , "pharmacy"};
 using json = nlohmann::json;
 
-std::string ROAD_TYPES[5] = {"primary","secondary","tertiary","expressway","local"};
+// std::string ROAD_TYPES[5] = {"primary","secondary","tertiary","expressway","local"};
 
 
 void Graph::add_edge(Edge* edge){
@@ -152,7 +152,7 @@ json Graph::knn(const nlohmann::json& query){
         std::priority_queue<std::pair<double, int>, std::vector<std::pair<double, int>>, std::greater<std::pair<double, int>>> q;
 
         for (auto& node : nodes){
-            if (find(node->pois.begin(), node->pois.end(), poi_type) != node->pois.end()){
+            if (node->pois[poi_type]){
                 double dist = sqrt(pow(node->lat - query_lat, 2) + pow(node->lon - query_lon, 2));
                 q.push({dist, node->id});             
             }

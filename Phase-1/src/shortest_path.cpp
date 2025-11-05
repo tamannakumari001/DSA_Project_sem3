@@ -1,4 +1,4 @@
-#include "graph.cpp" 
+#include "../include/graph.hpp" 
 #include <unordered_set>
 #include <vector>
 #include <queue>      
@@ -55,6 +55,9 @@ Graph::PathResult Graph::minimumTime(int src, int dest,
                 if(curr_node == src) break;
                 curr_node = prev_node[curr_node];
             }
+
+            std::reverse(result.nodes.begin(), result.nodes.end());
+            return result;
         }
 
         for(const auto& edge_rel : adj_list[u]){
@@ -203,12 +206,12 @@ json Graph::ShortestPath(json query){
     output["id"] = query["id"];
 
     
-    if (!query.contains("source") || !query.contains("destination")) {
+    if (!query.contains("source") || !query.contains("target")) {
         return output;
     }
 
     int src = query["source"];
-    int dest = query["destination"];
+    int dest = query["target"];
 
    
     std::unordered_set<int> forbiddenNodes;

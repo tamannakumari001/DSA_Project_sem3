@@ -1,3 +1,6 @@
+#ifndef GRAPH_HPP
+#define GRAPH_HPP
+
 #include <iostream>
 #include <vector>
 #include <map>
@@ -63,3 +66,5 @@ public:
     void add_edge(Edge* edge);
     json knn(const nlohmann::json& query);
 };
+
+#endif
