@@ -3,6 +3,8 @@
 #include <fstream>
 #include <chrono>
 #include <vector>
+#include "src/graph.cpp"
+#include "src/shortest_path.cpp"
 /*
     Add other includes that you require, only write code wherever indicated
 */
@@ -15,6 +17,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+    Graph graph(argv[1]);
     // Read graph from first file
     /*
         Add your graph reading and processing code here
@@ -42,7 +45,11 @@ int main(int argc, char* argv[]) {
 
         // Answer each query replacing the function process_query using 
         // whatever function or class methods that you have implemented
-        json result = process_query(query);
+        json result;
+        if (query["type"] == "shortest_path"){
+            result = ShortestPath(graph, query);
+        }
+        // json result = process_query(query);
 
         auto end_time = std::chrono::high_resolution_clock::now();
         result["processing_time"] = std::chrono::duration<double, std::milli>(end_time - start_time).count();

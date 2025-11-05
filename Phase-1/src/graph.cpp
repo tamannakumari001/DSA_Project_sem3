@@ -1,15 +1,17 @@
 #include "../include/graph.hpp"
 #include <fstream>
 
-string ROAD_TYPES[5] = {"primary","secondary","tertiary","expressway","local"};
+using json = nlohmann::json;
 
-Graph::Graph(const string& filename) {
-    fstream file(filename);
+std::string ROAD_TYPES[5] = {"primary","secondary","tertiary","expressway","local"};
+
+Graph::Graph(const std::string& filename) {
+    std::fstream file(filename);
     if (!file.is_open()) {
-        cerr << "Error opening file: " << filename << endl;
+        std::cerr << "Error opening file: " << filename << std::endl;
         return;
     }
-    nlohmann::json data;
+    json data;
     file >> data;
 
     num_nodes = data["meta"]["nodes"];
@@ -46,3 +48,4 @@ Graph::Graph(const string& filename) {
     }
     
 }
+
