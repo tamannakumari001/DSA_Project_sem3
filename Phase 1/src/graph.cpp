@@ -105,29 +105,107 @@ void Graph::modify_edge(int edge_id, const nlohmann::json& patch){
     if (patch.contains("road_type")){
         edge -> road_type = patch["road_type"];
     }
-    // if (patch.contains("speed_profile")){
-    //     edge->speed_profile.clear();
-    //     for (auto& speed : patch["speed_profile"]){
-    //         edge->speed_profile.push_back(speed);
+    if (patch.contains("speed_profile")){
+        edge->speed_profile.clear();
+        for (auto& speed : patch["speed_profile"]){
+            edge->speed_profile.push_back(speed);
+        }
+    }
+    // if (patch.contains("oneway")){
+    //     bool prev = edge->oneway;
+    //     edge->oneway = patch["oneway"]; 
+    //     if (prev == edge->oneway) return;
+
+    //     if (edge->oneway){
+    //         auto it = find(adj_list[edge->to].begin() , adj_list[edge -> to].end() , make_pair(nodes[edge->from] , edge));
+    //         if (it != adj_list[edge->to].end()){
+    //             adj_list[edge -> to].erase(it);
+    //         }
+        
+    //     else{
+    //     adj_list[edge->to].emplace_back(nodes[edge->from], edge);
     //     }
     // }
-    if (patch.contains("oneway")){
-        bool prev = edge->oneway;
-        edge->oneway = patch["oneway"]; 
-        if (prev == edge->oneway) return;
 
-        if (edge->oneway){
-            auto it = find(adj_list[edge->to].begin() , adj_list[edge -> to].end() , make_pair(nodes[edge->from] , edge));
-            if (it != adj_list[edge->to].end()){
-                adj_list[edge -> to].erase(it);
+        
+    // }
+
+
+
+}
+
+vector<int> Graph::knn(const nlohmann::json& query){
+    int query_id = query["id"];
+    int k = query["k"];
+    string poi_type = query["poi"];
+    double query_lat = query["query_point"]["lat"];
+    double query_lon = query["query_point"]["lon"];
+    string metric = query["metric"];
+
+    vector<int> final_answer;
+
+
+    if (metric == "euclidean"){
+        priority_queue<pair<double, int>, vector<pair<double, int>>, greater<pair<double, int>>> q;
+
+        for (auto& node : nodes){
+            if (find(node->pois.begin(), node->pois.end(), poi_type) != node->pois.end()){
+                double dist = sqrt(pow(node->lat - query_lat, 2) + pow(node->lon - query_lon, 2));
+                q.push({dist, node->id});             
             }
         }
-        else{
-            adj_list[edge->to].emplace_back(nodes[edge->from], edge);
+
+        while (!q.empty() && final_answer.size() < k){
+            final_answer.push_back(q.top().second);
+            q.pop();
         }
-        
     }
 
+    if (metric == "shortest_path"){
+        if(nodes.empty()){
+            return {};
+        }
+        double curr_min = numeric_limits<double>::max();
+        int source_id = -1;
+        for(auto& node : nodes){
+            double dist = sqrt(pow(node->lat - query_lat, 2) + pow(node->lon - query_lon, 2));
+            if (dist < curr_min){
+                curr_min = dist;
+                source_id = node->id;
+            }
+        }
+        int pois_found = 0;
+        vector<double> distances(num_nodes, numeric_limits<double>::max());
+        vector<bool> processed(num_nodes, false);
+        distances[source_id] = 0.0;
+        priority_queue<pair<double, int>, vector<pair<double, int>>, greater<pair<double, int>>> q;
+        q.push({0.0, source_id});  
 
+        while (!q.empty()){
+            auto [curr_dist, u] = q.top();
+            q.pop();
 
+            if (processed[u]) continue;
+            processed[u] = true;
+
+            if (find(nodes[u]->pois.begin(), nodes[u]->pois.end(), poi_type) != nodes[u]->pois.end()){
+                final_answer.push_back(u);
+                pois_found++;
+                if (pois_found == k){
+                    break;
+                }
+            }
+
+            for (auto& [neighbor, edge] : adj_list[u]){
+
+                double weight = edge->length;
+                if (distances[u] + weight < distances[neighbor->id]){
+                    distances[neighbor->id] = distances[u] + weight;
+                    q.push({distances[neighbor->id], neighbor->id});
+                }
+            }
+        }
+    }
+
+    return final_answer;
 }

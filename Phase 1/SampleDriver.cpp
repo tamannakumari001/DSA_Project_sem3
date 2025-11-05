@@ -54,6 +54,7 @@ int main(int argc, char* argv[]) {
 
         else if (type == "knn"){
             //knn function
+            graph.knn(event);
         }
             
         

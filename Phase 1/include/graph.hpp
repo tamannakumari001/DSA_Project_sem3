@@ -3,6 +3,7 @@
 #include <map>
 #include <nlohmann/json.hpp>
 #include <algorithm>
+#include <queue>
 
 
 using namespace std;
@@ -36,6 +37,7 @@ public:
     void remove_edge(int edge_id);
     void modify_edge(int edge_id, const nlohmann::json& patch);
     void add_edge(Edge* edge);
+    vector<int> knn(const nlohmann::json& query);
 };
 
 
