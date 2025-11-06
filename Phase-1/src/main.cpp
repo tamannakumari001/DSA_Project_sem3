@@ -3,13 +3,13 @@
 #include <fstream>
 #include <chrono>
 #include <vector>
-#include "src/graph.cpp"
-#include "src/shortest_path.cpp"
+// #include "src/graph.cpp"
+// #include "src/shortest_path.cpp"
+#include "../include/graph.hpp"
 /*
     Add other includes that you require, only write code wherever indicated
 */
 
-#include "src/graph.cpp"
 
 using json = nlohmann::json;
 

@@ -46,13 +46,17 @@ public:
         bool ifPath = false;
         double distance = std::numeric_limits<double>::infinity();
         std::vector<int> nodes;
+        std::vector<int> edges;
+        bool operator==(const PathResult& other) const {
+            return nodes == other.nodes && edges == other.edges;
+        }
     };
 
     Graph(const std::string& filename);
     json ShortestPath(json query);
     PathResult minimumDistance(int src, int dest,
                            const std::unordered_set<int>& forbiddenNodes,
-                           const std::unordered_set<std::string>& forbiddenRoadTypes);
+                           const std::unordered_set<int>& forbiddenEdge);
 
     PathResult minimumTime(int src, int dest,
                             const std::unordered_set<int>& forbiddenNodes,
@@ -65,6 +69,8 @@ public:
     json modify_edge(const json& query);
     void add_edge(Edge* edge);
     json knn(const nlohmann::json& query);
+    json ksp(const nlohmann::json& query);
+    std::vector<PathResult> k_shortest_paths_distance(int source, int target, int k);
 };
 
 #endif 
