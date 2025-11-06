@@ -24,20 +24,12 @@ int main(int argc, char* argv[]) {
         Add your graph reading and processing code here
         Initialize any classes and data structures needed for query processing
     */
-   std::vector<json> results;
+   
 
-    try
-   {
-        Graph graph(argv[1]);
-  
-    
-
+    Graph graph(argv[1]);
+ 
     // Read queries from second file
-
-
-
-
-
+    std::vector<json> results;
     std::ifstream queries_file(argv[2]);
     if (!queries_file.is_open()) {
         std::cerr << "Failed to open " << argv[2] << std::endl;
@@ -98,10 +90,7 @@ int main(int argc, char* argv[]) {
         result["processing_time"] = std::chrono::duration<double, std::milli>(end_time - start_time).count();
         results.push_back(result);
     }
-    }catch(const std::exception& e){
-        std::cerr << e.what() << '\n';
-        std::cout << "hiii" << std::endl;
-    }
+   
 
     std::ofstream output_file(argv[3]);
     if (!output_file.is_open()) {
