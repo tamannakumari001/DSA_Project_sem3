@@ -2,3 +2,8 @@
 hi.cpp
 test.cpp
 *.out
+script.py
+phase1
+phase2
+phase3
+obj/*
