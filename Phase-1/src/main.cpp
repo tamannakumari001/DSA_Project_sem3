@@ -25,7 +25,13 @@ int main(int argc, char* argv[]) {
         Add your graph reading and processing code here
         Initialize any classes and data structures needed for query processing
     */
-    Graph graph(argv[1]);
+   std::vector<json> results;
+
+    try
+   {
+        Graph graph(argv[1]);
+  
+    
 
     // Read queries from second file
 
@@ -41,8 +47,8 @@ int main(int argc, char* argv[]) {
     json queries_json;
     queries_file >> queries_json;
 
-    std::vector<json> results;
-
+    
+    
     for (const auto& query : queries_json["events"]) {
         auto start_time = std::chrono::high_resolution_clock::now();
 
@@ -54,30 +60,48 @@ int main(int argc, char* argv[]) {
         // Answer each query replacing the function process_query using 
         // whatever function or class methods that you have implemented
         json result;
-        auto type = query["type"];
+        try
+        {
+            if (!query.contains("type")){
+                std::cout << "DOES NOT CONTAIN TYPE HELPP" << std::endl;
+                return -1;
+            }
+            auto type = query["type"];
 
-        if (type == "remove_edge"){
-            //remove_edge function
-            result=graph.remove_edge(query);
-        }
+            if (type == "remove_edge"){
+                //remove_edge function
+                result=graph.remove_edge(query);
+            }
 
-        else if (type == "modify_edge"){
-            //modify_edge function
-            result = graph.modify_edge(query);
-        }
+            else if (type == "modify_edge"){
+                //modify_edge function
+                result = graph.modify_edge(query);
+            }
 
-        else if (type == "knn"){
-            //knn function
-            result = graph.knn(query);
+            else if (type == "knn"){
+                //knn function
+                result = graph.knn(query);
+            }
+            else if (type == "shortest_path"){
+                result = graph.ShortestPath(query);
+            }
+
         }
-        else if (type == "shortest_path"){
-            result = graph.ShortestPath(query);
+        catch(const std::exception& e)
+        {
+            std::cerr << e.what() << '\n';
+            std::cerr << "Query type: " << query["type"] << '\n';
+            std::cerr << "Query ID: " << query["id"] << '\n';
         }
         // json result = process_query(query);
 
         auto end_time = std::chrono::high_resolution_clock::now();
         result["processing_time"] = std::chrono::duration<double, std::milli>(end_time - start_time).count();
         results.push_back(result);
+    }
+    }catch(const std::exception& e){
+        std::cerr << e.what() << '\n';
+        std::cout << "hiii" << std::endl;
     }
 
     std::ofstream output_file(argv[3]);

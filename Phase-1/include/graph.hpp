@@ -56,7 +56,7 @@ public:
 
     PathResult minimumTime(int src, int dest,
                             const std::unordered_set<int>& forbiddenNodes,
-                            const std::unordered_set<std::string>& forbiddenRoadTypes);
+                            const std::unordered_set<std::string>& forbiddenRoadTypes, nlohmann::json query);
 
     int getNumNodes(){
         return num_nodes;

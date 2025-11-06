@@ -10,7 +10,7 @@
 
 Graph::PathResult Graph::minimumTime(int src, int dest,
                             const std::unordered_set<int>& forbiddenNodes,
-                            const std::unordered_set<std::string>& forbiddenRoadTypes){
+                            const std::unordered_set<std::string>& forbiddenRoadTypes, json query){
 
     int num_nodes = getNumNodes();
     if (src >= num_nodes || dest >= num_nodes || src < 0 || dest < 0){
@@ -65,7 +65,7 @@ Graph::PathResult Graph::minimumTime(int src, int dest,
             Edge* edge = edge_rel.second;
             int v = v_node->id;
 
-            if(forbiddenNodes.count(v) || forbiddenRoadTypes.count(edge->road_type)){
+            if(forbiddenNodes.count(v) || forbiddenRoadTypes.count(edge->road_type) || !edge->active){
                 continue;
             }
 
@@ -80,7 +80,7 @@ Graph::PathResult Graph::minimumTime(int src, int dest,
                 double distToBeTravelled = edge->length;
                 while(true){
                     int multiplier = (int)(t1/(15*60*96)) + 1;
-                    int currSpeed;
+                    double currSpeed;
                     if (currentIdx < 96){
                         currSpeed = edge->speed_profile[currentIdx];
                     }else{
@@ -96,7 +96,7 @@ Graph::PathResult Graph::minimumTime(int src, int dest,
                         break;
                     }
                 }
-                newTime = time[u] + t1;
+                newTime = t1;
             }
 
             if(!visited[v] && newTime < time[v]){
@@ -207,6 +207,7 @@ json Graph::ShortestPath(json query){
 
     
     if (!query.contains("source") || !query.contains("target")) {
+        std::cout << "DOES NOT CONTAIN SOURCE OR TARGET HELPP" << std::endl;
         return output;
     }
 
@@ -227,6 +228,9 @@ json Graph::ShortestPath(json query){
 
     PathResult result;
 
+    if(!query.contains("mode")){
+        std::cout << "CONTAINS NO MODE AHHH" << std::endl;
+    }
     if (query["mode"] == "distance"){
         result = minimumDistance(src, dest, forbiddenNodes, forbiddenRoadTypes);
 
@@ -238,7 +242,7 @@ json Graph::ShortestPath(json query){
             output["possible"] = false; 
         }
     }else{
-        result = minimumTime(src, dest, forbiddenNodes, forbiddenRoadTypes);
+        result = minimumTime(src, dest, forbiddenNodes, forbiddenRoadTypes, query);
 
         if(result.ifPath){
             output["possible"] = true;
