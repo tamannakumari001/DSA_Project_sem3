@@ -27,20 +27,17 @@ Graph::Graph(const std::string& filename) {
     file >> data;
 
     if(!data.contains("meta")){
-        std::cout << "DOES NOT CONTAIN META AHH" << '\n';
-        exit(-1);
+        throw "Error: Does not contain 'meta'";
     }
     if(!data["meta"].contains("nodes")){
-        std::cout << "DOES NOT CONTAIN META NODES AHH" << '\n';
-        exit(-1);
+        throw "Error: Input does not contain number of nodes in metadata";
     }
     num_nodes = data["meta"]["nodes"];
     nodes.resize(num_nodes);
     adj_list.resize(num_nodes);
 
     if(!data.contains("nodes")){
-        std::cout << "DOES NOT CONTAIN NODES AHH" << '\n';
-        exit(-1);
+        throw "Error: Input does not contain nodes";
     }
     for (auto& n : data["nodes"]){
         Node* node = new Node();
@@ -85,10 +82,7 @@ json Graph::remove_edge(const json& query){
     json result;
     result["id"] = query["id"];
     if (!query.contains("edge_id")){
-        std::cout << "NO EDGE ID IN REMOVE EDGE AHH" << '\n';
-        exit(-1);
-        result["done"]= false;
-        return result;
+        throw "Error: No edge id given in query";
     }
     int edge_id = query["edge_id"];
     if (edges.find(edge_id)==edges.end()){
@@ -108,10 +102,7 @@ json Graph::modify_edge(const json& query){
 
 
     if (!query.contains("edge_id")){
-        result["done"]= false;
-        // std::cout << "NO EDGE ID OR PATCH IN MODIFY EDGE AHH" << '\n';
-        // exit(-1);
-        return result;
+        throw "Error: No edge id given in query";
     }
 
     int edge_id = query["edge_id"];
@@ -128,8 +119,6 @@ json Graph::modify_edge(const json& query){
     }
 
     json patch = query["patch"];
-
-
     
 
     Edge* edge = edges[edge_id];

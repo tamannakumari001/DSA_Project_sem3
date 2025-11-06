@@ -207,8 +207,7 @@ json Graph::ShortestPath(json query){
 
     
     if (!query.contains("source") || !query.contains("target")) {
-        std::cout << "DOES NOT CONTAIN SOURCE OR TARGET HELPP" << std::endl;
-        return output;
+        throw "Error: Query does not contain source/target";
     }
 
     int src = query["source"];
@@ -229,7 +228,7 @@ json Graph::ShortestPath(json query){
     PathResult result;
 
     if(!query.contains("mode")){
-        std::cout << "CONTAINS NO MODE AHHH" << std::endl;
+        throw "Error: Query does not contain mode of shortest path";
     }
     if (query["mode"] == "distance"){
         result = minimumDistance(src, dest, forbiddenNodes, forbiddenRoadTypes);
