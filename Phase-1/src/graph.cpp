@@ -70,7 +70,7 @@ Graph::Graph(const std::string& filename) {
             for (auto& speed : e["speed_profile"]){
                 edge->speed_profile.push_back(speed);
             }
-        }
+        }    
         edge->oneway = e["oneway"];
         edge->road_type = e["road_type"];
         edges[edge->id] = edge;
