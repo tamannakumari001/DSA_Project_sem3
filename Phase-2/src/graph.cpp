@@ -27,9 +27,19 @@ Graph::Graph(const std::string& filename) {
     json data;
     file >> data;
 
+    if(!data.contains("meta")){
+        throw "Error: Does not contain 'meta'";
+    }
+    if(!data["meta"].contains("nodes")){
+        throw "Error: Input does not contain number of nodes in metadata";
+    }
     num_nodes = data["meta"]["nodes"];
     nodes.resize(num_nodes);
     adj_list.resize(num_nodes);
+
+    if(!data.contains("nodes")){
+        throw "Error: Input does not contain nodes";
+    }
     for (auto& n : data["nodes"]){
         Node* node = new Node();
         node->id = n["id"];
@@ -57,7 +67,7 @@ Graph::Graph(const std::string& filename) {
             for (auto& speed : e["speed_profile"]){
                 edge->speed_profile.push_back(speed);
             }
-        }
+        }    
         edge->oneway = e["oneway"];
         edge->road_type = e["road_type"];
         edges[edge->id] = edge;
@@ -73,8 +83,7 @@ json Graph::remove_edge(const json& query){
     json result;
     result["id"] = query["id"];
     if (!query.contains("edge_id")){
-        result["done"]= false;
-        return result;
+        throw "Error: No edge id given in query";
     }
     int edge_id = query["edge_id"];
     if (edges.find(edge_id)==edges.end()){
@@ -92,18 +101,30 @@ json Graph::modify_edge(const json& query){
     json result;
     result["id"] = query["id"];
 
+
+    if (!query.contains("edge_id")){
+        throw "Error: No edge id given in query";
+    }
+
     int edge_id = query["edge_id"];
+
+    if (edges.find(edge_id) == edges.end()){
+        result["done"]= false;
+        return result;
+    }
+
+    if(!query.contains("patch")){
+        if(!edges[edge_id]->active){
+            result["done"] = true;
+        }else{
+            result["done"] = false;
+        }
+        edges[edge_id]->active = true;
+        return result;
+    }
+
     json patch = query["patch"];
-
-    if (!query.contains("edge_id") || !query.contains("patch")){
-        result["done"]= false;
-        return result;
-    }
-
-    if (edges.find(edge_id)==edges.end()){
-        result["done"]= false;
-        return result;
-    }
+    
 
     Edge* edge = edges[edge_id];
     edge -> active = true;
