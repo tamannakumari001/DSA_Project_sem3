@@ -76,21 +76,16 @@ Graph::PathResult Graph::minimumTime(int src, int dest,
                 t1 = edge->avg_time;
                 newTime = time[u] + t1; 
             }else{
-                int currentIdx = (int)(time[u]/(15*60)) % 96;
+                int timeIdx = (int)(time[u]/(15*60));
                 double distToBeTravelled = edge->length;
                 while(true){
-                    int multiplier = (int)(t1/(15*60*96)) + 1;
+                    int currentIdx = timeIdx%96;
                     double currSpeed;
-                    if (currentIdx < 96){
-                        currSpeed = edge->speed_profile[currentIdx];
-                    }else{
-                        currSpeed = edge->speed_profile.front();
-                        currentIdx = 0;
-                    }
-                    if(distToBeTravelled - currSpeed*((currentIdx+1)*15*60*multiplier - t1) > 0){
-                        distToBeTravelled -= currSpeed*((currentIdx+1)*15*60*multiplier - t1);
-                        t1 = (currentIdx+1)*15*60*multiplier;
-                        currentIdx++;
+                    currSpeed = edge->speed_profile[currentIdx];
+                    if(distToBeTravelled - currSpeed*((timeIdx + 1)*(15*60) - t1) > 0){
+                        distToBeTravelled -= currSpeed*((timeIdx + 1)*(15 * 60) - t1);
+                        t1 = (timeIdx + 1)*(15 * 60);
+                        timeIdx++;
                     }else{
                         t1 += (distToBeTravelled)/currSpeed;
                         break;
@@ -232,25 +227,17 @@ json Graph::ShortestPath(json query){
     }
     if (query["mode"] == "distance"){
         result = minimumDistance(src, dest, forbiddenNodes, forbiddenRoadTypes);
-
-        if(result.ifPath){
-            output["possible"] = true;
-            output["minimum_distance"] = result.distance;
-            output["path"] = result.nodes;
-        }else{
-            output["possible"] = false; 
-        }
     }else{
         result = minimumTime(src, dest, forbiddenNodes, forbiddenRoadTypes, query);
-
-        if(result.ifPath){
-            output["possible"] = true;
-            output["minimum_time"] = result.distance;
-            output["path"] = result.nodes;
-        }else{
-            output["possible"] = false;
-        }
-    } 
+    }
+    
+    if(result.ifPath){
+        output["possible"] = true;
+        output["minimum_time/minimum_distance"] = result.distance;
+        output["path"] = result.nodes;
+    }else{
+        output["possible"] = false; 
+    }
 
     return output;
 }

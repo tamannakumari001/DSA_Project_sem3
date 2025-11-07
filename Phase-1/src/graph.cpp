@@ -114,8 +114,12 @@ json Graph::modify_edge(const json& query){
     }
 
     if(!query.contains("patch")){
+        if(!edges[edge_id]->active){
+            result["done"] = true;
+        }else{
+            result["done"] = false;
+        }
         edges[edge_id]->active = true;
-        result["done"] = true;
         return result;
     }
 
