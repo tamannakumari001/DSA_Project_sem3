@@ -69,8 +69,16 @@ public:
     json modify_edge(const json& query);
     void add_edge(Edge* edge);
     json knn(const nlohmann::json& query);
+    
     json ksp(const nlohmann::json& query);
     std::vector<PathResult> k_shortest_paths_distance(int source, int target, int k);
+    
+    json ksp_heuristic(const nlohmann::json& query);
+    PathResult minimumDistanceHeuristic(int src, int dest, std::unordered_map<int, int> &edgeCount, const int alpha, const double overlapThreshold);
+    std::vector<PathResult> k_shortest_paths_heuristic(int source, int target, int k, double overlapThreshold);
+    double computePenalty(const std::vector<Graph::PathResult> &paths, double overlapThreshold);
+    std::vector<PathResult> best_subset(const std::vector<Graph::PathResult> &paths, int k, double overlapThreshold);
+    std::vector<std::vector<PathResult>> generate_subsets(int n, int k, const std::vector<Graph::PathResult> &paths);
 };
 
 #endif 

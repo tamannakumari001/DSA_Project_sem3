@@ -82,6 +82,9 @@ Graph::PathResult Graph::minimumTime(int src, int dest,
                     int currentIdx = timeIdx%96;
                     double currSpeed;
                     currSpeed = edge->speed_profile[currentIdx];
+                    //(timeIdx + 1)*(15*60) indicates the amount of time left for the speed to change
+                    //It only matters in the first iteration when t1 is not a perfect multiple of 15 mins
+                    //For other iterations this term will just be 15
                     if(distToBeTravelled - currSpeed*((timeIdx + 1)*(15*60) - t1) > 0){
                         distToBeTravelled -= currSpeed*((timeIdx + 1)*(15 * 60) - t1);
                         t1 = (timeIdx + 1)*(15 * 60);

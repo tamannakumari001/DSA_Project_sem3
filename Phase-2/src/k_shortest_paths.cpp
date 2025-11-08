@@ -9,14 +9,17 @@ json Graph::ksp(const json& query) {
     result["id"] = query["id"];
 
     if (!query.contains("source") || !query.contains("target") || !query.contains("k")) {
-        result["paths"] = json::array();
-        return result;
+        throw "Error: Query does not contain source/target/k";
     }
 
     int k = query["k"];
     int source = query["source"];
     int target = query["target"];
     std::vector<PathResult> paths;
+
+    if(!query.contains("mode")){
+        throw "Error: Query does not contain mode";
+    }
 
     if (query["mode"] == "distance"){
         paths = k_shortest_paths_distance(source, target, k);
@@ -31,7 +34,7 @@ json Graph::ksp(const json& query) {
     }
 
     else{
-        //pass
+        throw "Error: Query contains unknown mode";
     }
 }
 
