@@ -74,8 +74,12 @@ Graph::Graph(const std::string& filename) {
         edge -> active = true;
         add_edge(edge);
     }
+
+
     
 }
+
+
 
 
 json Graph::remove_edge(const json& query){

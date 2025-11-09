@@ -9,6 +9,8 @@
 #include <algorithm>
 #include <queue>
 #include <limits>
+#include <chrono>
+#include <cmath>
 
 using json = nlohmann::json;
 
@@ -38,8 +40,9 @@ private:
     std::vector<Node*> nodes;
     int num_nodes;
     std::vector<std::vector<std::pair<Node*, Edge*>>> adj_list;
+    std::vector<std::vector<double>> hDistances;
+    std::vector<int> landmarks;
 
-    
 public:
     
     struct PathResult {
@@ -65,6 +68,12 @@ public:
     int getNumNodes(){
         return num_nodes;
     }
+
+    double getEuclidianDistance(int n, int m){
+        return sqrt((nodes[n]->lat - nodes[m]->lat)*(nodes[n]->lat - nodes[m]->lat) 
+         + (nodes[n]->lon - nodes[m]->lon)*(nodes[n]->lon - nodes[m]->lon));
+    }
+
     json remove_edge(const json& query);
     json modify_edge(const json& query);
     void add_edge(Edge* edge);
@@ -79,6 +88,12 @@ public:
     double computePenalty(const std::vector<Graph::PathResult> &paths, double overlapThreshold);
     std::vector<PathResult> best_subset(const std::vector<Graph::PathResult> &paths, int k, double overlapThreshold);
     std::vector<std::vector<PathResult>> generate_subsets(int n, int k, const std::vector<Graph::PathResult> &paths);
+
+    json shortest_path_approx(const nlohmann::json& query);
+    void precomputation();
+    std::vector<double> sssp_from(int src);
+    double approx_shortest_distance(int src, int dest, double acceptable_error,
+         double time_budget_total, double budget, bool &timeflag, double remainingTime);
 };
 
 #endif 

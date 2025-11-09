@@ -71,6 +71,12 @@ int main(int argc, char* argv[]) {
         }
         else if (type == "shortest_path"){
             result = graph.ShortestPath(query);
+        }else if (type == "k_shortest_paths"){
+            result = graph.ksp(query);
+        }else if (type == "k_shortest_paths_heuristic"){
+            result = graph.ksp_heuristic(query);
+        }else if(type == "approx_shortest_path"){
+            result = graph.shortest_path_approx(query);
         }
         // json result = process_query(query);
 

@@ -1,11 +1,5 @@
 #include "../include/graph.hpp" 
-#include <unordered_set>
-#include <vector>
-#include <queue>      
-#include <limits>     
-#include <map>        
-#include <algorithm>  
-#include <iostream>   
+#include <fstream> 
 
 json Graph::ksp_heuristic(const json& query) {
     json result;
@@ -204,7 +198,7 @@ double Graph::computePenalty(const std::vector<Graph::PathResult> &paths, double
     }
 
     for(int i = 0; i < noOfPaths; i++){
-        for(int j = i+1; j <noOfPaths;j++){
+        for(int j = i; j <noOfPaths;j++){
             int common = 0;
             for(const int& e : edgeSets[i]){
                 if(edgeSets[j].count(e)){
@@ -220,6 +214,9 @@ double Graph::computePenalty(const std::vector<Graph::PathResult> &paths, double
             }
             if(overlapj > overlapThreshold){
                 overlapCount[j]++;
+            }
+            if(i == j){
+                overlapCount[i]--;
             }
         }
     }

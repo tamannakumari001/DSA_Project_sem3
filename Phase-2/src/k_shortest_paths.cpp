@@ -8,8 +8,11 @@ json Graph::ksp(const json& query) {
     json result;
     result["id"] = query["id"];
 
-    if (!query.contains("source") || !query.contains("target") || !query.contains("k")) {
-        throw "Error: Query does not contain source/target/k";
+    if (!query.contains("source") || !query.contains("target")) {
+        throw "Error: Query does not contain source/target";
+    }
+    if(!query.contains("k")){
+        throw "Error: Query does not contain k";
     }
 
     int k = query["k"];

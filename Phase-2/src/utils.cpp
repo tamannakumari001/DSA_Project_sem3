@@ -182,6 +182,9 @@ Graph::PathResult Graph::minimumDistance(int src, int dest,
                 dist[v] = newDist;
                 prev_node[v_node->id] = u;
                 prev_edge[v_node->id] = edge->id;
+                if(forbiddenEdges.empty() && forbiddenNodes.empty()){
+                    hDistances[src][v] = newDist;
+                }
                 pq.push({newDist, v});
             }
         }
