@@ -266,12 +266,12 @@ std::vector<std::vector<Graph::PathResult>> Graph::generate_subsets(int n, int k
         if (i < 0) break; 
 
         comb[i]++;
-        for (int j = i + 1; j < comb.size(); ++j)
+        for (int j = i + 1; j < (int)comb.size(); ++j)
             comb[j] = comb[j - 1] + 1;
     }
 
     std::vector<std::vector<Graph::PathResult>> subsets_Paths;
-    for(int i = 0; i < subsets.size(); i++){
+    for(int i = 0; i < (int)subsets.size(); i++){
         std::vector<Graph::PathResult> subset_Path;
         for(const auto& j : subsets[i]){
             subset_Path.push_back(paths[j]);

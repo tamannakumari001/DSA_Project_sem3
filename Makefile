@@ -6,7 +6,7 @@ CXX = g++
 # -g: Include debugging symbols
 # -Wall: Enable all compiler warnings
 # -O2: Optimization level 2
-CXXFLAGS = -std=c++17 -g -Wall -Og
+CXXFLAGS = -std=c++17 -g -Wall -O3
 
 # Include directory
 INCDIR = Phase-1/include
@@ -26,7 +26,7 @@ EXEC2 = phase2
 
 # List of source files
 SOURCES = $(SRCDIR)/main.cpp $(SRCDIR)/graph.cpp $(SRCDIR)/shortest_path.cpp
-SOURCES2 = $(SRCDIR2)/main.cpp $(SRCDIR)/graph.cpp $(SRCDIR2)/k_shortest_paths.cpp $(SRCDIR2)/utils.cpp $(SRCDIR2)/k_shortest_paths_heuristic.cpp
+SOURCES2 = $(SRCDIR2)/main.cpp $(SRCDIR2)/graph.cpp $(SRCDIR2)/k_shortest_paths.cpp $(SRCDIR2)/utils.cpp $(SRCDIR2)/k_shortest_paths_heuristic.cpp
 
 # Generate object file names from source file names
 # (e.g., Phase-1/src/main.cpp -> obj/main.o)
@@ -55,11 +55,11 @@ $(EXEC2): $(OBJECTS2)
 # Use a static pattern rule for more robust matching.
 # This explicitly tells make how to build the files listed in $(OBJECTS).
 $(OBJECTS): $(OBJDIR)/%.o: $(SRCDIR)/%.cpp $(INCDIR)/graph.hpp | $(OBJDIR)
-	@echo "Compiling for Phase-1 $<..."
+	@echo "Compiling $<..."
 	$(CXX) $(CXXFLAGS) -I$(INCDIR) -c $< -o $@
 
 $(OBJECTS2): $(OBJDIR2)/%.o: $(SRCDIR2)/%.cpp $(INCDIR2)/graph.hpp | $(OBJDIR2)
-	@echo "Compiling for Phase-2 $<..."
+	@echo "Compiling $<..."
 	$(CXX) $(CXXFLAGS) -I$(INCDIR2) -c $< -o $@
 
 # Rule to create the object directory

@@ -97,10 +97,10 @@ std::vector<Graph::PathResult> Graph::k_shortest_paths_distance(int source, int 
             }
 
             for (const auto& p : paths) {
-                if (p.nodes.size() > i &&
+                if ((int)p.nodes.size() > i &&
                     std::equal(p.nodes.begin(), p.nodes.begin() + i + 1, curr_path.nodes.begin())) 
                 {
-                    if (p.edges.size() > i)
+                    if ((int)p.edges.size() > i)
                         forbiddenEdges.insert(p.edges[i]);
                 }
             }

@@ -74,7 +74,7 @@ int main(int argc, char* argv[]) {
         catch(const std::exception& e)
         {
             std::cerr << e.what() << '\n';
-            if(!(e.what() == "Error: Input does not contain query type"))
+            if(!(std::string(e.what()) == "Error: Input does not contain query type"))
                 std::cerr << "Query type: " << query["type"] << '\n';
             std::cerr << "Query ID: " << query["id"] << '\n';
         }
