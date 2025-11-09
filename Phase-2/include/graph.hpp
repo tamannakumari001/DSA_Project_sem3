@@ -11,6 +11,7 @@
 #include <limits>
 
 using json = nlohmann::json;
+using ordered_json = nlohmann::ordered_json;
 
 
 struct Node{
@@ -74,7 +75,7 @@ public:
     std::vector<PathResult> k_shortest_paths_distance(int source, int target, int k);
     
     json ksp_heuristic(const nlohmann::json& query);
-    PathResult minimumDistanceHeuristic(int src, int dest, std::unordered_map<int, int> &edgeCount, const int alpha, const double overlapThreshold);
+    PathResult minimumDistanceHeuristic(int src, int dest, std::unordered_map<int, int> &edgeCount, const double alpha, const double overlapThreshold);
     std::vector<PathResult> k_shortest_paths_heuristic(int source, int target, int k, double overlapThreshold);
     double computePenalty(const std::vector<Graph::PathResult> &paths, double overlapThreshold);
     std::vector<PathResult> best_subset(const std::vector<Graph::PathResult> &paths, int k, double overlapThreshold);

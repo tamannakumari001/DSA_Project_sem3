@@ -8,3 +8,5 @@ phase2
 phase3
 obj/*.o
 *.txt
+testcases/
+.vscode
