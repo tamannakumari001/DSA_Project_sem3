@@ -6,7 +6,7 @@ script.py
 phase1
 phase2
 phase3
-obj/*.o
+obj/
 *.txt
 testcases/
 .vscode
