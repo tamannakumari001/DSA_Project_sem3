@@ -184,7 +184,7 @@ json Graph::knn(const nlohmann::json& query){
             }
         }
 
-        while (!q.empty() && final_answer.size() < k){
+        while (!q.empty() && (int)final_answer.size() < k){
             final_answer.push_back(q.top().second);
             q.pop();
         }

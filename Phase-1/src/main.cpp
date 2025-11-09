@@ -54,8 +54,7 @@ int main(int argc, char* argv[]) {
         try
         {
             if (!query.contains("type")){
-                std::cout << "DOES NOT CONTAIN TYPE HELPP" << std::endl;
-                return -1;
+                throw "Error: Input does not contain query type";
             }
             auto type = query["type"];
 
@@ -76,12 +75,16 @@ int main(int argc, char* argv[]) {
             else if (type == "shortest_path"){
                 result = graph.ShortestPath(query);
             }
+            else{
+                throw "Error: Unknown query type";
+            }
 
         }
         catch(const std::exception& e)
         {
             std::cerr << e.what() << '\n';
-            std::cerr << "Query type: " << query["type"] << '\n';
+            if(!(std::string(e.what()) == "Error: Input does not contain query type"))
+                std::cerr << "Query type: " << query["type"] << '\n';
             std::cerr << "Query ID: " << query["id"] << '\n';
         }
         // json result = process_query(query);

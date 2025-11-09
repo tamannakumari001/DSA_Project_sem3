@@ -5,7 +5,7 @@
 
 
 json Graph::ksp(const json& query) {
-    json result;
+    ordered_json result;
     result["id"] = query["id"];
 
     if (!query.contains("source") || !query.contains("target")) {
@@ -26,14 +26,14 @@ json Graph::ksp(const json& query) {
 
     if (query["mode"] == "distance"){
         paths = k_shortest_paths_distance(source, target, k);
-        result["paths"] = json::array();
+        result["paths"] = ordered_json::array();
         for (const auto& path : paths){
-            json path_json;
+            ordered_json path_json;
             path_json["path"] = path.nodes;
             path_json["length"] = path.distance;
             result["paths"].push_back(path_json);
         }
-    return result;
+    return json(result);
     }
 
     else{
@@ -100,10 +100,10 @@ std::vector<Graph::PathResult> Graph::k_shortest_paths_distance(int source, int 
             }
 
             for (const auto& p : paths) {
-                if (p.nodes.size() > i &&
+                if ((int)p.nodes.size() > i &&
                     std::equal(p.nodes.begin(), p.nodes.begin() + i + 1, curr_path.nodes.begin())) 
                 {
-                    if (p.edges.size() > i)
+                    if ((int)p.edges.size() > i)
                         forbiddenEdges.insert(p.edges[i]);
                 }
             }
@@ -113,6 +113,7 @@ std::vector<Graph::PathResult> Graph::k_shortest_paths_distance(int source, int 
 
             if (spur_path.ifPath){
                 Graph::PathResult total_path;
+                total_path.ifPath = true;
                 total_path.distance = 0.0;
 
                 for (int n = 0; n <= i; ++n){

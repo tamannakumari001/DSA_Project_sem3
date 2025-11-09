@@ -36,7 +36,7 @@ json Graph::ksp_heuristic(const json& query) {
 
 Graph::PathResult Graph::minimumDistanceHeuristic(int src, int dest,
                            std::unordered_map<int, int> &edgeCount,
-                           const int alpha, const double overlapThreshold) {
+                           const double alpha, const double overlapThreshold) {
     
     int num_nodes = getNumNodes();
     if (src >= num_nodes || dest >= num_nodes || src < 0 || dest < 0) {
@@ -45,6 +45,7 @@ Graph::PathResult Graph::minimumDistanceHeuristic(int src, int dest,
 
     
     std::vector<double> dist(num_nodes, std::numeric_limits<double>::infinity());
+    std::vector<double> unbiasedDist(num_nodes, std::numeric_limits<double>::infinity());
     
    
     std::vector<int> prev_node(num_nodes, -1);
@@ -57,6 +58,7 @@ Graph::PathResult Graph::minimumDistanceHeuristic(int src, int dest,
 
     std::vector<bool> visited(num_nodes, false);
     dist[src] = 0.0;
+    unbiasedDist[src] = 0.0;
     pq.push({0.0, src});
 
     while (!pq.empty()) {
@@ -71,7 +73,7 @@ Graph::PathResult Graph::minimumDistanceHeuristic(int src, int dest,
 
         if (u == dest) {
             PathResult result;
-            result.distance = dist[dest];
+            result.distance = unbiasedDist[dest];
             result.ifPath = true;
 
             int curr_node = u;
@@ -93,11 +95,13 @@ Graph::PathResult Graph::minimumDistanceHeuristic(int src, int dest,
             int v = v_node->id;
 
         
-            double costFactor = exp(alpha*edgeCount[edge->id]*(1-overlapThreshold));
+            double costFactor = exp(alpha*edgeCount[edge->id]*(1-(overlapThreshold/100)));
             double newDist = dist[u] + edge->length*costFactor;
+            double newUnbiasedDist = unbiasedDist[u] + edge->length;
 
             if (!visited[v] && newDist < dist[v]) {
                 dist[v] = newDist;
+                unbiasedDist[v] = newUnbiasedDist;
                 prev_node[v_node->id] = u;
                 prev_edge[v_node->id] = edge->id;
                 pq.push({newDist, v});
@@ -110,10 +114,10 @@ Graph::PathResult Graph::minimumDistanceHeuristic(int src, int dest,
 
 std::vector<Graph::PathResult> Graph::k_shortest_paths_heuristic(int source, int target, int k, double overlapThreshold){
     
-    const int alpha = 0.4;
+    const double alpha = 0.4;
     std::vector<PathResult> paths;
-
-    Graph::PathResult curr_path = minimumDistance(source, target, {},{});
+    std::unordered_map<int, int> EdgeCount;
+    Graph::PathResult curr_path = minimumDistanceHeuristic(source, target, EdgeCount, 0, overlapThreshold);
 
     if (!curr_path.ifPath){
         return paths;
@@ -127,7 +131,7 @@ std::vector<Graph::PathResult> Graph::k_shortest_paths_heuristic(int source, int
     }
 
     paths.push_back(curr_path);
-    std::unordered_map<int, int> EdgeCount;
+    
     for(int i = 0; i < k-1; i++){
         Graph::PathResult new_path = minimumDistanceHeuristic(source, target, EdgeCount, alpha, overlapThreshold);
         if(!new_path.ifPath){
@@ -198,7 +202,7 @@ double Graph::computePenalty(const std::vector<Graph::PathResult> &paths, double
     }
 
     for(int i = 0; i < noOfPaths; i++){
-        for(int j = i; j <noOfPaths;j++){
+        for(int j = i; j < noOfPaths;j++){
             int common = 0;
             for(const int& e : edgeSets[i]){
                 if(edgeSets[j].count(e)){
@@ -208,6 +212,7 @@ double Graph::computePenalty(const std::vector<Graph::PathResult> &paths, double
 
             double overlapi = (double) common/ paths[i].edges.size();
             double overlapj = (double) common/ paths[j].edges.size();
+            
 
             if(overlapi > overlapThreshold){
                 overlapCount[i]++;
@@ -254,12 +259,12 @@ std::vector<std::vector<Graph::PathResult>> Graph::generate_subsets(int n, int k
         if (i < 0) break; 
 
         comb[i]++;
-        for (int j = i + 1; j < comb.size(); ++j)
+        for (int j = i + 1; j < (int)comb.size(); ++j)
             comb[j] = comb[j - 1] + 1;
     }
 
     std::vector<std::vector<Graph::PathResult>> subsets_Paths;
-    for(int i = 0; i < subsets.size(); i++){
+    for(int i = 0; i < (int)subsets.size(); i++){
         std::vector<Graph::PathResult> subset_Path;
         for(const auto& j : subsets[i]){
             subset_Path.push_back(paths[j]);
