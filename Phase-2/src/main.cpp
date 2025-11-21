@@ -6,6 +6,7 @@
 // #include "src/graph.cpp"
 // #include "src/shortest_path.cpp"
 #include "../include/graph.hpp"
+// #define DEBUG
 /*
     Add other includes that you require, only write code wherever indicated
 */
@@ -25,8 +26,16 @@ int main(int argc, char* argv[]) {
         Initialize any classes and data structures needed for query processing
     */
    
-
+    #ifdef DEBUG
+        auto start = std::chrono::high_resolution_clock::now();
+    #endif
     Graph graph(argv[1]);
+    #ifdef DEBUG
+        auto end = std::chrono::high_resolution_clock::now();
+        std::cout << std::chrono::duration<double, std::milli>(end - start).count() << std::endl;
+
+        exit(0);
+    #endif
  
     // Read queries from second file
     std::vector<json> results;

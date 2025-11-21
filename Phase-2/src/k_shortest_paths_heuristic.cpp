@@ -210,8 +210,8 @@ double Graph::computePenalty(const std::vector<Graph::PathResult> &paths, double
                 }
             }
 
-            double overlapi = (double) common/ paths[i].edges.size();
-            double overlapj = (double) common/ paths[j].edges.size();
+            double overlapj = (double) common/ paths[i].edges.size();
+            double overlapi = (double) common/ paths[j].edges.size();
             
 
             if(overlapi > overlapThreshold){

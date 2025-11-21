@@ -43,6 +43,7 @@ private:
     std::vector<std::vector<std::pair<Node*, Edge*>>> adj_list;
     std::vector<std::vector<double>> hDistances;
     std::vector<int> landmarks;
+    std::vector<std::vector<double>> sp;
 
 public:
     
@@ -95,6 +96,8 @@ public:
     std::vector<double> sssp_from(int src);
     double approx_shortest_distance(int src, int dest, double acceptable_error,
          double time_budget_total, double budget, bool &timeflag, double remainingTime);
+
+    std::vector<double> sssp(int src) const;
 };
 
 #endif 

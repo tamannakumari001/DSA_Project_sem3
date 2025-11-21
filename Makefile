@@ -6,7 +6,7 @@ CXX = g++
 # -g: Include debugging symbols
 # -Wall: Enable all compiler warnings
 # -O2: Optimization level 2
-CXXFLAGS = -std=c++17 -g -Wall -O3
+CXXFLAGS = -std=c++17 -g -Wall -O3 -fopenmp
 
 # Include directory
 INCDIR = Phase-1/include

@@ -1,5 +1,4 @@
-
-
+#include <omp.h>
 #include "../include/graph.hpp"
 #include <fstream>
 
@@ -16,6 +15,45 @@ void Graph::add_edge(Edge* edge){
         adj_list[edge->to].emplace_back(nodes[edge->from], edge);
     }
 }
+
+
+std::vector<double> Graph::sssp(int src) const{
+    
+    std::vector<double> dist(num_nodes, std::numeric_limits<double>::infinity());
+    std::vector<bool> visited(num_nodes, false);
+    std::priority_queue<std::pair<double, int>, std::vector<std::pair<double, int>>, std::greater<std::pair<double, int>>> pq;
+
+    dist[src] = 0;
+    pq.push({0.0, src});
+
+    while(!pq.empty()){
+        // std::cout << "NODE " << src << std::endl;
+        int currnode = pq.top().second;
+        pq.pop();
+
+        if(visited[currnode]){
+            continue;
+        }
+        visited[currnode] = true;
+
+        for (const auto& edge_rel : adj_list[currnode]) {
+            Node* v_node = edge_rel.first;
+            Edge* edge = edge_rel.second;
+            int v = v_node->id;
+             
+            double length = edge->length;
+            double newDist = dist[currnode] + length;
+
+            
+            if (!visited[v] && newDist < dist[v]) {
+                dist[v] = newDist;
+                pq.push({newDist, v}); 
+            }
+        }
+    }
+    return dist;
+}
+
 
 
 Graph::Graph(const std::string& filename) {
@@ -75,84 +113,17 @@ Graph::Graph(const std::string& filename) {
         add_edge(edge);
     }
 
+    sp.resize(num_nodes);
 
-    
+    #pragma omp parallel for schedule(dynamic)
+    for(int i = 0; i < num_nodes; i++){
+        sp[i] = sssp(i);
+    }
 }
 
 
 
 
-json Graph::remove_edge(const json& query){
-
-    json result;
-    result["id"] = query["id"];
-    if (!query.contains("edge_id")){
-        throw "Error: No edge id given in query";
-    }
-    int edge_id = query["edge_id"];
-    if (edges.find(edge_id)==edges.end()){
-        result["done"]= false;
-        return result;
-    }
-    edges[edge_id]->active = false;
-    result["done"] = true;
-    return result;
-
-}
-
-json Graph::modify_edge(const json& query){
-
-    json result;
-    result["id"] = query["id"];
-
-
-    if (!query.contains("edge_id")){
-        throw "Error: No edge id given in query";
-    }
-
-    int edge_id = query["edge_id"];
-
-    if (edges.find(edge_id) == edges.end()){
-        result["done"]= false;
-        return result;
-    }
-
-    if(!query.contains("patch")){
-        if(!edges[edge_id]->active){
-            result["done"] = true;
-        }else{
-            result["done"] = false;
-        }
-        edges[edge_id]->active = true;
-        return result;
-    }
-
-    json patch = query["patch"];
-    
-
-    Edge* edge = edges[edge_id];
-    edge -> active = true;
-
-    if (patch.contains("length")){
-        edge->length = patch["length"];
-    }
-    if (patch.contains("average_time")){
-        edge->avg_time = patch["average_time"]; 
-    }
-    if (patch.contains("road_type")){
-        edge -> road_type = patch["road_type"];
-    }
-    if (patch.contains("speed_profile")){
-        edge->speed_profile.clear();
-        for (auto& speed : patch["speed_profile"]){
-            edge->speed_profile.push_back(speed);
-        }
-    }
-
-    result["done"] = true;
-    return result;
-
-}
 
 json Graph::knn(const nlohmann::json& query){
     int query_id = query["id"];
