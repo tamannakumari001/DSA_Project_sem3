@@ -121,6 +121,7 @@ double Graph::approx_shortest_distance(int src, int dest, double acceptable_erro
             if (!visited[v] && newDist < dist[v]) {
                 dist[v] = newDist;
                 hDistances[src][v] = newDist;
+                hDistances[currnode][v] = std::min(hDistances[currnode][v], length);
                 pq.push({newDist + w*hDistances[v][dest], v});
             }
         }

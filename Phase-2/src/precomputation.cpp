@@ -31,10 +31,11 @@ std::vector<double> Graph::sssp_from(int src){
             
             if (!visited[v] && newDist < dist[v]) {
                 dist[v] = newDist;
-                hDistances[currnode][v] = newDist;
-                if(hDistances[v][currnode] == getEuclidianDistance(v, currnode)){
-                    hDistances[v][currnode] = newDist;
+                hDistances[src][v] = newDist;
+                if(hDistances[v][src] == getEuclidianDistance(v, src)){
+                    hDistances[v][src] = newDist;
                 }
+                hDistances[currnode][v] = std::min(hDistances[currnode][v], length);
                 pq.push({newDist, v}); 
             }
         }
@@ -53,7 +54,7 @@ void Graph::precomputation(){
         }
     }
 
-    int num_landmarks = std::min(std::max(10, num_nodes/275),20);
+    int num_landmarks = std::min(num_nodes, 2500);
     
     landmarks.push_back(0);
 
@@ -76,6 +77,10 @@ void Graph::precomputation(){
                 hDistances[i][j] = 0;
                 continue;
             }
+            if(hDistances[i][j] != getEuclidianDistance(i, j)){
+                continue;
+            }
+    
             double hvalue = hDistances[i][j];
             for(int k : landmarks){
                 double diff = std::fabs(hDistances[k][i] - hDistances[k][j]);
