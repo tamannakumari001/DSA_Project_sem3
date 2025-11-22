@@ -81,11 +81,14 @@ int main(int argc, char* argv[]) {
         catch(const std::exception& e)
         {
             std::cerr << e.what() << '\n';
-            if(!(std::string(e.what()) == "Error: Input does not contain query type"))
+            
+        }
+        catch(const char* msg){
+            std::cerr << msg << '\n';
+            if(!(std::string(msg) == "Error: Input does not contain query type"))
                 std::cerr << "Query type: " << query["type"] << '\n';
             std::cerr << "Query ID: " << query["id"] << '\n';
         }
-        // json result = process_query(query);
 
         auto end_time = std::chrono::high_resolution_clock::now();
         result["processing_time"] = std::chrono::duration<double, std::milli>(end_time - start_time).count();
