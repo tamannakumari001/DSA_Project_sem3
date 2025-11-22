@@ -22,6 +22,7 @@ struct Node{
     double lat;
     double lon;
     std::unordered_map<std::string,bool> pois;
+    int zone_id;
 };
 
 struct Edge{
@@ -42,7 +43,8 @@ private:
     std::vector<Node*> nodes;
     int num_nodes;
     std::vector<std::vector<std::pair<Node*, Edge*>>> adj_list;
-    std::vector<std::vector<double>> hDistances;
+    std::vector<std::vector<double>> spTimes;  
+    std::vector<std::vector<int>> spParents; // stores parents for everyNode for every possible dijkstra spanning tree
     std::vector<int> landmarks;
 
 public:
@@ -93,6 +95,9 @@ public:
     double approx_shortest_distance(int src, int dest, double acceptable_error,
          double time_budget_total, double budget, bool &timeflag, double remainingTime);
     json phase_3(const nlohmann::json& query);
+    std::vector<std::vector<double>> getAffinityWeights(const std::vector<Order> &orderNodes, int depotNode, std::unordered_set<int> &impNodes);
+    void PartitionGraph(const std::vector<Order> &orderNodes, int depotNode);
+
 
 };
 
