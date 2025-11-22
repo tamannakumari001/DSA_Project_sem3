@@ -8,12 +8,9 @@ struct Order{
     int order_id;
     Node* pickup;
     Node* drop;
-    int zone_pickup;
-    int zone_drop;
     double cost;
-
     bool intra(){
-        return zone_pickup == zone_drop;
+        return pickup->zone_id == drop->zone_id;
     }
 
 };
@@ -34,8 +31,21 @@ struct Rider{
 struct Zone{
 
     int zone_id;
+    std::vector<int> nodes;
+    std::vector<int> orders;
+    std::vector<int> riders;
     double concentration_score;
     
+};
+
+struct Candidate{
+    double weight;
+    int target;
+    int zone_id;
+
+    bool operator<(Candidate const& other) const {
+        return weight < other.weight;
+    }
 };
 
 class Del_Graph{
@@ -43,6 +53,7 @@ class Del_Graph{
 public:    
 
     std::unordered_map<int , Order*> Orders;
+    std::vector<Order*> orderList;
     std::vector<Rider*> Riders;
     std::vector<Zone*> zones;
     std::vector<int> zonal_orders;
@@ -55,6 +66,23 @@ public:
     double time_taken = 0;
 
  
+};
+
+enum StopType {
+    PICKUP,
+    DROPOFF
+};
+
+struct Stop{
+    int node_id;
+    StopType type;
+    int order_id;
+};
+
+struct SimDriver {
+    int id;
+    int current_node;
+    std::vector<Stop> scheduled_path;
 };
 
 #endif

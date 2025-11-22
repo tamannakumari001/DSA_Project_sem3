@@ -40,6 +40,7 @@ std::vector<double> Graph::sssp_from(int src){
     return time_taken;
 }
 
+
 void Graph::precomputation(){
     #pragma omp parallel for schedule(dynamic)
     for(int i = 0;i < num_nodes;i++){

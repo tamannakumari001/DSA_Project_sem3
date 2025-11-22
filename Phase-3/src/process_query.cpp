@@ -35,6 +35,7 @@ json Graph::phase_3(const nlohmann::json& query){
         o -> pickup = nodes[order["pickup"]];
         o -> drop = nodes[order["dropoff"]];
         G.Orders[o -> order_id] = o;
+
     }
 
     G.num_riders = query["fleet"]["num_delivery_guys"];
@@ -46,21 +47,33 @@ json Graph::phase_3(const nlohmann::json& query){
         G.Riders.push_back(r);
     }
 
-    //computing zones
-
-    // int num_zones = 0.75 * G.num_riders; //heuristic. Here for now I am assuming a distribution where around 75% of drivers may go zonal;
-    // G.num_zones = num_zones;
-
+    PartitionGraph(G);
+    orderNodesByZone(G);
+    allocateZonalRiders(G);
+    allocateZonalRidersPaths(G);
+    allocateGlobalRiders(G);    
     
-    // for(int i = 1; i < num_zones; i++){
-    //     int lastLandmark = G.landmarks[i-1];
-    //     std::vector<double> distFromLandmark = sssp_from(lastLandmark);
-    //     for(int i =0; i< num_nodes; i++){
-    //         min_dist[i] = std::min(distFromLandmark[i], min_dist[i]);
-    //     }
-        
-    //     int farthest = std::max_element(min_dist.begin(), min_dist.end()) - min_dist.begin();
-    //     landmarks.push_back(farthest);
-    // }
-    
+    for(auto & order_pair : G.Orders){
+        Order* order = order_pair.second;
+        if(order -> cost < 0){
+            throw "Error: Some orders couldn't be assigned";
+        }
+        G.time_taken += order -> cost;
+    }
+
+    output["assignments"] = json::array();
+    for (auto & rider : G.Riders){
+        json rider_output;
+        rider_output["driver_id"] = rider -> rider_id;
+        rider_output["route"] = rider -> final_route;
+        rider_output["order_ids"] = rider -> assigned_orders;
+        output["assignments"].push_back(rider_output);
+    }
+
+    output["metrics"]["total_delivery_time_s"] = G.time_taken;
+
+    return output;
+
+
+
 }

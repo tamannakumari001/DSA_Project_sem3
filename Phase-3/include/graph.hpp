@@ -1,4 +1,3 @@
-
 #ifndef GRAPH_HPP
 #define GRAPH_HPP
 
@@ -12,6 +11,9 @@
 #include <limits>
 #include <chrono>
 #include <cmath>
+#include <numeric>
+#include <unordered_map>
+#include <atomic>
 
 using json = nlohmann::json;
 using ordered_json = nlohmann::ordered_json;
@@ -22,7 +24,7 @@ struct Node{
     double lat;
     double lon;
     std::unordered_map<std::string,bool> pois;
-    int zone_id;
+    int zone_id = -1;
 };
 
 struct Edge{
@@ -73,17 +75,36 @@ public:
         return num_nodes;
     }
 
-    double getEuclidianDistance(int n, int m){
-        return sqrt((nodes[n]->lat - nodes[m]->lat)*(nodes[n]->lat - nodes[m]->lat) 
-         + (nodes[n]->lon - nodes[m]->lon)*(nodes[n]->lon - nodes[m]->lon));
+    uint64_t idx(uint64_t i, uint64_t j){
+        return i*num_nodes + j;
     }
 
+    double getEuclidianDistance(int n, int m){
+        const double R = 6371000.0;
+        double phi1 = nodes[n]->lat * M_PI/180.0;
+        double phi2 = nodes[m]->lat * M_PI/180.0;
+        double dphi = (nodes[m]->lat - nodes[n]->lat) * M_PI/180.0;
+        double dlambda = (nodes[m]->lon - nodes[n]->lon) * M_PI/180.0;
+
+        double a = std::sin(dphi / 2.0) * std::sin(dphi / 2.0) +
+               std::cos(phi1) * std::cos(phi2) *
+               std::sin(dlambda / 2.0) * std::sin(dlambda / 2.0);
+    
+        double c = 2.0 * std::atan2(std::sqrt(a), std::sqrt(1.0 - a));
+
+        return R * c;
+    }
+
+    json remove_edge(const json& query);
+    json modify_edge(const json& query);
+    void add_edge(Edge* edge);
+    json knn(const nlohmann::json& query);
     
     json ksp(const nlohmann::json& query);
     std::vector<PathResult> k_shortest_paths_distance(int source, int target, int k);
     
     json ksp_heuristic(const nlohmann::json& query);
-    PathResult minimumDistanceHeuristic(int src, int dest, std::unordered_map<int, int> &edgeCount, const double alpha, const double overlapThreshold);
+    PathResult minimumDistanceHeuristic(int src, int dest, std::unordered_map<int, int> &edgeCount, const double alpha, const double overlapThreshold, bool ifOnePath);
     std::vector<PathResult> k_shortest_paths_heuristic(int source, int target, int k, double overlapThreshold);
     double computePenalty(const std::vector<Graph::PathResult> &paths, double overlapThreshold);
     std::vector<PathResult> best_subset(const std::vector<Graph::PathResult> &paths, int k, double overlapThreshold);
@@ -92,13 +113,30 @@ public:
     json shortest_path_approx(const nlohmann::json& query);
     void precomputation();
     std::vector<double> sssp_from(int src);
-    double approx_shortest_distance(int src, int dest, double acceptable_error,
-         double time_budget_total, double budget, bool &timeflag, double remainingTime);
+
+    double approx_shortest_distance(int src, int dest, double acceptable_error, 
+                                       std::chrono::time_point<std::chrono::steady_clock> deadline, 
+                                       std::atomic<bool> &global_timeout);
+
+    std::vector<double> sssp(int src) const;
+
+    std::vector<std::vector<double>> penalties;
+    std::vector<double> computePenalty2(const std::vector<PathResult> &paths, double overlapThreshold);
     json phase_3(const nlohmann::json& query);
-    std::vector<std::vector<double>> getAffinityWeights(const std::vector<Order> &orderNodes, int depotNode, std::unordered_set<int> &impNodes);
-    void PartitionGraph(const std::vector<Order> &orderNodes, int depotNode);
+    void PartitionGraph(Del_Graph &G);
+    void allocateZonalRiders(Del_Graph &G);
 
+    double calculateZoneMSTWorkLoad(Del_Graph &G, int zone_id);
+    std::vector<std::vector<double>> getAffinityWeights(int depotNode, std::unordered_set<int> &impNodes, Del_Graph &G);
+    double calcPathScore(int start_node, const std::vector<Stop>& path);
 
+    void allocateZonalRidersPaths(Del_Graph &G);
+    void convertScheduledPathsToOutput(Rider* rider, std::vector<Stop>& scheduled_path);
+    void allocateGlobalRiders(Del_Graph &G);
+    void orderNodesByZone(Del_Graph &G);
+
+    std::pair<double, std::vector<Stop>> FindBestInsertion(const SimDriver& driver, Order* order);
+    void AllocateBatch(const std::vector<int>& orders, std::vector<SimDriver>& drivers, Del_Graph &G);
 };
 
 #endif 
