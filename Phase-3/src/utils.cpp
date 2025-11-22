@@ -49,29 +49,36 @@ void Graph::PartitionGraph(Del_Graph &G){
     int k_density = ceil(N/40.0);
 
     int num_zones = std::max(k_fleet, k_density);
-    Zone* z1 = new Zone(); 
+    G.num_zones = num_zones;
+    Zone z1; 
     std::vector<double> min_dist(num_nodes, std::numeric_limits<double>::infinity());
     G.landmarks.push_back(depotNode);
-    z1->zone_id = 0;
-    z1->nodes.push_back(depotNode);
-    G.zones.push_back(*z1);
-    // G.zones[0]->zone_id = 0;
-    // G.zones[0]->nodes.push_back(depotNode);
+    z1.zone_id = 0;
+    z1.nodes.push_back(depotNode);
+    G.zones.push_back(z1);
     nodes[depotNode]->zone_id = 0;
     for(int i = 1; i < num_zones; i++){
         int lastLandmark = G.landmarks[i-1];
+        double max_val = -1.0;
+        int farthest = -1;
+
         for(auto &v : impNodes){
             min_dist[v] = std::min(min_dist[v], spTimes[lastLandmark][v]);
+
+            if (min_dist[v] > max_val && min_dist[v] != std::numeric_limits<double>::infinity()) {
+                max_val = min_dist[v];
+                farthest = v;
+            }
         }
-        int farthest = std::max_element(min_dist.begin(), min_dist.end()) - min_dist.begin(); 
+
+        // Safety check
+        if (farthest == -1) break; 
         G.landmarks.push_back(farthest);
         nodes[farthest]->zone_id = i;
-        Zone* z = new Zone();
-        z->zone_id = i;
-        z->nodes.push_back(farthest);
-        G.zones.push_back(*z);
-        // G.zones[i]->zone_id = i;
-        // G.zones[i]->nodes.push_back(farthest);
+        Zone z;
+        z.zone_id = i;
+        z.nodes.push_back(farthest);
+        G.zones.push_back(z);
     }
 
     std::priority_queue<Candidate> pq;
@@ -105,13 +112,13 @@ void Graph::PartitionGraph(Del_Graph &G){
             }
         }
     }
-    std::cout << "printing zones haha" << '\n';
-    for(int i = 0; i < num_zones; i++){
-        for(auto &x : G.zones[i].nodes){
-            std::cout << x << " ";
-        }
-        std::cout << '\n';
-    }
+    // std::cout << "printing zones haha" << '\n';
+    // for(int i = 0; i < num_zones; i++){
+    //     for(auto &x : G.zones[i].nodes){
+    //         std::cout << x << " ";
+    //     }
+    //     std::cout << '\n';
+    // }
 
     for(auto& v : impNodes){
         if(nodes[v]->zone_id == -1){
@@ -126,8 +133,22 @@ double Graph::calculateZoneMSTWorkLoad(Del_Graph &G, int zone_id){
     int zone_size = G.zones[zone_id].nodes.size();
     std::vector<double> min_dist(zone_size, std::numeric_limits<double>::infinity());
     std::vector<bool> in_mst(zone_size, false);
-    int start_node = G.landmarks[zone_id];
-    min_dist[start_node] = 0.0;
+    
+    int start_node_global = G.landmarks[zone_id];
+    int start_node_local = -1;
+
+    for(int k = 0; k < zone_size; k++) {
+        if (G.zones[zone_id].nodes[k] == start_node_global) {
+            start_node_local = k;
+            break;
+        }
+    }
+
+    if (start_node_local != -1) {
+        min_dist[start_node_local] = 0.0;
+    } else {
+        if(zone_size > 0) min_dist[0] = 0.0;
+    }
 
     double mst_weight = 0.0;
 
@@ -219,26 +240,27 @@ void Graph::allocateZonalRiders(Del_Graph &G){
         }
         zone_drivers[s.zone_id] = final_count;
     }
-    int updated_zonal_riders = 0;
-    for (int i = 0; i < G.num_zones; i++) 
-        updated_zonal_riders += zone_drivers[i];
     
-    for(int i = 0 ; i < updated_zonal_riders ; i++){
+    
+    int riders_assigned_count = 0;
+    
+    int total_zonal_limit = 0;
+    for(int z : zone_drivers) total_zonal_limit += z;
+
+    
+    for(int i = 0; i < G.Riders.size() && riders_assigned_count < total_zonal_limit; i++){
+        
+
         G.Riders[i]->zonal = true;
+        
         for(int j = 0 ; j < G.num_zones ; j++){
             if(zone_drivers[j] > 0){
                 G.Riders[i]->zone_id = j;
-                std::cout << "adding rider id: "<< i << " to zone_id: " <<j<<std::endl;
                 G.zones[j].riders.push_back(i);
                 zone_drivers[j]--;
+                riders_assigned_count++;
                 break;
             }
         }
-    }
-    for(int i = 0 ; i<(int)G.zones.size(); i++){
-        for(auto x : G.zones[i].riders){
-            std::cout<< x << " ";
-        }
-        std::cout << std::endl;
     }
 }
