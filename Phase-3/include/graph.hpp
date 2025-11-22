@@ -14,6 +14,7 @@
 #include <numeric>
 #include <unordered_map>
 #include <atomic>
+#include "utils.hpp"
 
 using json = nlohmann::json;
 using ordered_json = nlohmann::ordered_json;

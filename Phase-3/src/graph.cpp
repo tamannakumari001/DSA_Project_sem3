@@ -121,7 +121,9 @@ Graph::Graph(const std::string& filename) {
     //         sp[i] = sssp(i);
     //     }
     // }
-    // precomputation();
+    spParents.resize(num_nodes, std::vector<int>(num_nodes));
+    spTimes.resize(num_nodes, std::vector<double>(num_nodes));
+    precomputation();
 }
 
 

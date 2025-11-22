@@ -8,12 +8,12 @@ std::vector<double> Graph::sssp_from(int src){
     std::priority_queue<std::pair<double, int>, std::vector<std::pair<double, int>>, std::greater<std::pair<double, int>>> pq;
 
     time_taken[src] = 0;
-    visited[src] = true;
     pq.push({0.0, src});
 
     while(!pq.empty()){
         double time = pq.top().first;
         int currnode = pq.top().second;
+        pq.pop();
         
         if(visited[currnode]){
             continue;
@@ -42,7 +42,7 @@ std::vector<double> Graph::sssp_from(int src){
 
 
 void Graph::precomputation(){
-    #pragma omp parallel for schedule(dynamic)
+    // #pragma omp parallel for schedule(dynamic)
     for(int i = 0;i < num_nodes;i++){
         sssp_from(i);
     }

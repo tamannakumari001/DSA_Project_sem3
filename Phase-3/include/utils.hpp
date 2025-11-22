@@ -3,16 +3,14 @@
 
 #include "graph.hpp"
 
+struct Node;
+
 struct Order{
 
     int order_id;
     Node* pickup;
     Node* drop;
     double cost;
-    bool intra(){
-        return pickup->zone_id == drop->zone_id;
-    }
-
 };
 
 struct Rider{
@@ -34,7 +32,6 @@ struct Zone{
     std::vector<int> nodes;
     std::vector<int> orders;
     std::vector<int> riders;
-    double concentration_score;
     
 };
 
@@ -55,7 +52,7 @@ public:
     std::unordered_map<int , Order*> Orders;
     std::vector<Order*> orderList;
     std::vector<Rider*> Riders;
-    std::vector<Zone*> zones;
+    std::vector<Zone> zones;
     std::vector<int> zonal_orders;
     std::vector<int> inter_orders;
     std::vector<int> landmarks;
