@@ -54,9 +54,7 @@ public:
     int depot;
     double time_taken = 0;
 
-
-
-    
+ 
 };
 
 #endif

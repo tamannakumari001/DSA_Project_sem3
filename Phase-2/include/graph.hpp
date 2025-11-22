@@ -120,8 +120,6 @@ public:
 
     std::vector<double> sssp(int src) const;
 
-    std::vector<std::vector<double>> penalties;
-    std::vector<double> computePenalty2(const std::vector<PathResult> &paths, double overlapThreshold);
 };
 
 #endif 

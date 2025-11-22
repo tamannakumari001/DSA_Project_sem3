@@ -24,7 +24,6 @@ json Graph::ksp_heuristic(const json& query) {
     paths = k_shortest_paths_heuristic(source, target, k, overlapThreshold);
     result["paths"] = json::array();
 
-    penalties.push_back(computePenalty2(paths, overlapThreshold));
 
     for (const auto& path : paths){
         json path_json;
@@ -99,15 +98,10 @@ Graph::PathResult Graph::minimumDistanceHeuristic(int src, int dest,
 
             double costFactor = 1.0;
             if(ifOnePath){
-                // Testing new cost factor 1 - poly
-
+                
                 double thresholdFactor = (1-(overlapThreshold/100.0));
                 double usagePenalty = alpha*pow(edgeCount[edge->id], beta);
                 costFactor = 1.0 + (usagePenalty*thresholdFactor);
-
-                // end of testing 1
-
-                // double costFactor = exp(alpha*edgeCount[edge->id]*(1-(overlapThreshold/100)));
             }
             double newDist = dist[u] + edge->length*costFactor;
             double newUnbiasedDist = unbiasedDist[u] + edge->length;
@@ -130,7 +124,6 @@ std::vector<Graph::PathResult> Graph::k_shortest_paths_heuristic(int source, int
     const double alpha = 0.49;
     std::vector<PathResult> paths;
     std::unordered_map<int, int> EdgeCount;
-    int pathCount = 0;
     Graph::PathResult curr_path = minimumDistanceHeuristic(source, target, EdgeCount, 0, overlapThreshold, false);
 
     if (!curr_path.ifPath){
@@ -199,53 +192,6 @@ std::vector<Graph::PathResult> Graph::best_subset(const std::vector<Graph::PathR
     return path_Subsets[minIdx];
 }
 
-std::vector<double> Graph::computePenalty2(const std::vector<Graph::PathResult> &paths, double overlapThreshold){
-    double shortestlen = paths.front().distance;
-    int noOfPaths = paths.size();
-    
-    std::vector<std::unordered_set<int>> edgeSets(noOfPaths);
-    for (int i = 0; i < noOfPaths; ++i) {
-        edgeSets[i].insert(paths[i].edges.begin(), paths[i].edges.end());
-    }
-
-    std::vector<int> overlapCount(noOfPaths, 0);
-    std::vector<double> distPenalty(noOfPaths, 0);
-
-    for(int i = 0; i < noOfPaths;i++){
-        distPenalty[i] = ((paths[i].distance-shortestlen)*1.0/shortestlen) + 0.1;
-    }
-
-    for(int i = 0; i < noOfPaths; i++){
-        for(int j = i; j < noOfPaths;j++){
-            int common = 0;
-            for(const int& e : edgeSets[i]){
-                if(edgeSets[j].count(e)){
-                    common++;
-                }
-            }
-
-            double overlapj = (double) common/ paths[i].edges.size();
-            double overlapi = (double) common/ paths[j].edges.size();
-            
-
-            if(overlapi > overlapThreshold/100){
-                overlapCount[i]++;
-            }
-            if(overlapj > overlapThreshold/100){
-                overlapCount[j]++;
-            }
-            if(i == j){
-                overlapCount[i]--;
-            }
-        }
-    }
-    std::vector<double> pen;
-    for(int i = 0; i< noOfPaths; i++){
-        pen.push_back(overlapCount[i] * distPenalty[i]);
-    }
-
-    return pen;
-}
 
 double Graph::computePenalty(const std::vector<Graph::PathResult> &paths, double overlapThreshold){
     double shortestlen = paths.front().distance;
