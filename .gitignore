@@ -10,3 +10,7 @@ obj/
 *.txt
 testcases/
 .vscode
+*.csv
+*.bak
+*.py
+cache/

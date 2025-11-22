@@ -72,16 +72,6 @@ int main(int argc, char* argv[]) {
             }
             else if (type == "k_shortest_paths_heuristic"){
                 result = graph.ksp_heuristic(query);
-            }
-            else if (type == "knn"){
-                result = graph.knn(query);
-            }
-            else if (type == "shortest_path"){
-                result = graph.ShortestPath(query);
-            }else if (type == "k_shortest_paths"){
-                result = graph.ksp(query);
-            }else if (type == "k_shortest_paths_heuristic"){
-                result = graph.ksp_heuristic(query);
             }else if(type == "approx_shortest_path"){
                 result = graph.shortest_path_approx(query);
             }else{
@@ -101,7 +91,7 @@ int main(int argc, char* argv[]) {
         result["processing_time"] = std::chrono::duration<double, std::milli>(end_time - start_time).count();
         results.push_back(result);
     }
-   
+    
 
     std::ofstream output_file(argv[3]);
     if (!output_file.is_open()) {
