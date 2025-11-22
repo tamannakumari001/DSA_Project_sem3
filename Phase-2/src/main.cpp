@@ -72,16 +72,6 @@ int main(int argc, char* argv[]) {
             }
             else if (type == "k_shortest_paths_heuristic"){
                 result = graph.ksp_heuristic(query);
-            }
-            else if (type == "knn"){
-                result = graph.knn(query);
-            }
-            else if (type == "shortest_path"){
-                result = graph.ShortestPath(query);
-            }else if (type == "k_shortest_paths"){
-                result = graph.ksp(query);
-            }else if (type == "k_shortest_paths_heuristic"){
-                result = graph.ksp_heuristic(query);
             }else if(type == "approx_shortest_path"){
                 result = graph.shortest_path_approx(query);
             }else{
@@ -91,17 +81,20 @@ int main(int argc, char* argv[]) {
         catch(const std::exception& e)
         {
             std::cerr << e.what() << '\n';
-            if(!(std::string(e.what()) == "Error: Input does not contain query type"))
+            
+        }
+        catch(const char* msg){
+            std::cerr << msg << '\n';
+            if(!(std::string(msg) == "Error: Input does not contain query type"))
                 std::cerr << "Query type: " << query["type"] << '\n';
             std::cerr << "Query ID: " << query["id"] << '\n';
         }
-        // json result = process_query(query);
 
         auto end_time = std::chrono::high_resolution_clock::now();
         result["processing_time"] = std::chrono::duration<double, std::milli>(end_time - start_time).count();
         results.push_back(result);
     }
-   
+    
 
     std::ofstream output_file(argv[3]);
     if (!output_file.is_open()) {

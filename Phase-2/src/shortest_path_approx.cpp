@@ -1,106 +1,113 @@
 #include "../include/graph.hpp" 
 
+#define TIME_CHECK_FREQ 127 
+
 json Graph::shortest_path_approx(const json& query) {
     json result;
     result["id"] = query["id"];
 
-    if(!query.contains("time_budget_ms")){
-        throw "Error: Query does not contain time_budget_ms";
+    if(!query.contains("time_budget_ms")){ 
+        throw "Error: No time_budget_ms";
     }
-
     if(!query.contains("acceptable_error_pct")){
-        throw "Error: Query does not contain acceptable_error_pct";
+        throw "Error: No acceptable_error_pct";
     }
     
     double time_budget_ms = query["time_budget_ms"];
     double acceptable_error_pct = query["acceptable_error_pct"];
 
-    if(!query.contains("queries")){
-        throw "Error: Query does not contain queries";
-    }
-    std::vector<std::pair<int, int>> queries;
-    if (query["queries"].is_array()) {
-        for (const auto& q : query["queries"]) {
-            if (q.contains("source") && q.contains("target")) {
-                int src = q["source"];
-                int dst = q["target"];
-                queries.emplace_back(src, dst);
-            }else {
-                throw "Error: Source/Target not found";
-            }
-        }
-    }else{
-        throw "Error: queries is not an array";
+    if(!query.contains("queries") || !query["queries"].is_array()){
+        throw "Error: Invalid queries";
     }
 
-    auto batch_start = std::chrono::steady_clock::now();
+    std::vector<std::pair<int, int>> queries;
+    for (const auto& q : query["queries"]) {
+        if (q.contains("source") && q.contains("target")) {
+            queries.emplace_back(q["source"], q["target"]);
+        } else {
+            throw "Error: Source/Target not found";
+        }
+    }
 
     json distances = json::array();
-
     int noOfQueries = queries.size();
-    for(int i = 0; i < noOfQueries; i++){
-        auto query_time_start = std::chrono::steady_clock::now();
-        double elapsed_time = std::chrono::duration_cast<std::chrono::milliseconds>(query_time_start - batch_start).count();
-        double remaining = time_budget_ms - elapsed_time;
-        
-        double fraction_of_queries_not_over = (noOfQueries- i - 1)/(noOfQueries*1.0);
-        double extra_factor = (0.9 + (fraction_of_queries_not_over)*0.5 );
-        
-        double budget = (remaining/(noOfQueries-i)*1.0 ) * extra_factor;
-        
-        bool timeflag = false;
+    std::vector<json> temp_results(noOfQueries);
 
-        double approx_distance = approx_shortest_distance(queries[i].first, queries[i].second, acceptable_error_pct, time_budget_ms, budget, timeflag, remaining);
-        distances.push_back({
+    auto batch_start = std::chrono::steady_clock::now();
+    auto global_deadline = batch_start + std::chrono::milliseconds(static_cast<long>(time_budget_ms/1.1));
+    
+    std::atomic<bool> global_timeout(false);
+
+    #pragma omp parallel for schedule(dynamic) num_threads(8)
+    for(int i = 0; i < noOfQueries; i++){
+        
+        double approx_distance = approx_shortest_distance(
+            queries[i].first, 
+            queries[i].second, 
+            acceptable_error_pct, 
+            global_deadline, 
+            global_timeout
+        );
+
+        temp_results[i] = {
             {"source", queries[i].first},
             {"target", queries[i].second},
             {"approx_shortest_distance", approx_distance}
-        });
-
-        if(timeflag){
-            for(int j = i+1; j < noOfQueries;j++){
-                distances.push_back({
-                    {"source", queries[i].first},
-                    {"target", queries[i].second},
-                    {"approx_shortest_distance", hDistances[queries[i].first][queries[i].second]}
-                });
-            }
-            return distances;
-        }
+        };
     }
-    return distances;
+
+    for(auto &x : temp_results){
+        distances.push_back(x);
+    }
+    result["distances"] = distances;
+    return result;
 }
 
+double Graph::approx_shortest_distance(int src, int dest, double acceptable_error, 
+                                       std::chrono::time_point<std::chrono::steady_clock> deadline, 
+                                       std::atomic<bool> &global_timeout) {
 
-double Graph::approx_shortest_distance(int src, int dest, double acceptable_error, double time_budget_total, double budget, bool &timeflag, double remainingTime){
-    auto start = std::chrono::steady_clock::now();
-    
-    double error_factor = 1.0 + acceptable_error/100;
-    double w = 1.0 + (error_factor-1.03) /5.0;
-
-    int num_nodes = getNumNodes();
+    double w = 1.0 + (acceptable_error / 100.0);
     
     std::vector<double> dist(num_nodes, std::numeric_limits<double>::infinity());
-    
     std::priority_queue<std::pair<double, int>, 
                         std::vector<std::pair<double, int>>, 
                         std::greater<std::pair<double, int>>> pq;
     
     std::vector<bool> visited(num_nodes, false);
+    
     dist[src] = 0.0;
-    pq.push({0.0, src});
+    pq.push({0.0 + w * getEuclidianDistance(src, dest), src});
+
+    int ops_counter = 0;
 
     while (!pq.empty()) {
+        
+        
+        if ((ops_counter++ & TIME_CHECK_FREQ) == 0) {
+
+            if (global_timeout.load(std::memory_order_relaxed) || std::chrono::steady_clock::now() > deadline) {
+                global_timeout.store(true, std::memory_order_relaxed);
+    
+                int u = pq.top().second; 
+                double curr_dist = dist[u];
+                
+                if (curr_dist == std::numeric_limits<double>::infinity()) return -1.0;
+
+                return curr_dist + getEuclidianDistance(u, dest);
+            }
+        }
+
         int u = pq.top().second;
         pq.pop();
 
-        if (visited[u]) {
+        if (visited[u]){
             continue;
         }
 
         visited[u] = true;
 
-        if (u == dest) {
+        if (u == dest){
             return dist[dest];
         }
 
@@ -111,22 +118,12 @@ double Graph::approx_shortest_distance(int src, int dest, double acceptable_erro
 
             double newDist = dist[u] + edge->length;
 
-            auto now = std::chrono::steady_clock::now();
-            double elapsed_time = std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count();
-            if(remainingTime - elapsed_time < 0.01){
-                timeflag = true;
-                return dist[u] + hDistances[v][dest];
-            }
-
             if (!visited[v] && newDist < dist[v]) {
                 dist[v] = newDist;
-                hDistances[src][v] = newDist;
-                hDistances[u][v] = std::min(hDistances[u][v], edge->length);
-                pq.push({newDist + w*hDistances[v][dest], v});
+                pq.push({newDist + w * getEuclidianDistance(v,dest), v});
             }
         }
     }
 
     return -1;
-
 }

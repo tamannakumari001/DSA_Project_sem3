@@ -113,12 +113,15 @@ Graph::Graph(const std::string& filename) {
         add_edge(edge);
     }
 
-    sp.resize(num_nodes);
+    // if(num_nodes < 10000){
+    //     sp.resize(num_nodes);
 
-    #pragma omp parallel for schedule(dynamic)  
-    for(int i = 0; i < num_nodes; i++){
-        sp[i] = sssp(i);
-    }
+    //     #pragma omp parallel for schedule(dynamic)
+    //     for(int i = 0; i < num_nodes; i++){
+    //         sp[i] = sssp(i);
+    //     }
+    // }
+    // precomputation();
 }
 
 
